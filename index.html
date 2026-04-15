@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Value Consulting Intake | Amplitude</title>
+  <link rel="stylesheet" href="styles.css?v=9">
+</head>
+<body>
+  <nav class="top-nav">
+    <div class="nav-brand">
+      <svg class="amp-logo" viewBox="0 0 32 32" width="28" height="28"><circle cx="16" cy="16" r="16" fill="#1B1F3B"/><path d="M16 7l7.5 13H8.5L16 7z" fill="#fff"/></svg>
+      <span>Value Consulting</span>
+    </div>
+    <div class="nav-links">
+      <a href="#" class="nav-link active" data-page="intake">New Request</a>
+      <a href="#" class="nav-link" data-page="tracker">Request Tracker</a>
+      <a href="#" class="nav-link" data-page="analytics">Analytics</a>
+    </div>
+  </nav>
+
+  <!-- PAGE 1: INTAKE FORM (Minimal AE Input) -->
+  <main id="page-intake" class="page active">
+    <div class="container">
+      <div class="form-header">
+        <h1>Request VC Support</h1>
+        <p class="subtitle">Enter the account and your ask. We'll pull everything else automatically from Salesforce, Slack, Granola, and Glean.</p>
+      </div>
+
+      <form id="intake-form" novalidate>
+        <!-- SECTION 1: The Deal -->
+        <section class="form-section">
+          <h2>1. Identify the Deal</h2>
+          <div class="field">
+            <label for="account-input">Account Name or SFDC Opportunity URL <span class="required">*</span></label>
+            <input type="text" id="account-input" placeholder="e.g., Bank of America  or  https://amplitude.my.salesforce.com/006..." required autocomplete="off">
+            <small class="field-hint">We'll search Salesforce, pull opportunity details, and auto-populate the brief.</small>
+          </div>
+        </section>
+
+        <!-- SECTION 2: The Ask -->
+        <section class="form-section">
+          <h2>2. What Do You Need?</h2>
+          <div class="field">
+            <label for="help-needed">I need help with... <span class="required">*</span></label>
+            <textarea id="help-needed" rows="4" required placeholder="Be specific about the deliverable or support you need. Examples:&#10;- Outside-in financial model to support internal business case&#10;- Collaborative BVA ahead of exec meeting&#10;- Value realization deck to support renewal&#10;- ROI analysis for expansion business case"></textarea>
+          </div>
+          <div class="field">
+            <label for="needed-by">When do you need it by? <span class="required">*</span></label>
+            <input type="date" id="needed-by" required>
+          </div>
+        </section>
+
+        <!-- SECTION 3: Optional Context -->
+        <section class="form-section collapsible">
+          <h2 class="collapsible-header">
+            3. Additional Context <span class="optional-tag">Optional</span>
+            <span class="collapse-icon">+</span>
+          </h2>
+          <div class="collapsible-body hidden">
+            <p class="section-desc">This context helps but isn't required — we'll pull what we can from your Slack threads, call recordings, and Salesforce notes.</p>
+
+            <div class="field">
+              <label for="additional-context">Anything else the VC should know?</label>
+              <textarea id="additional-context" rows="3" placeholder="Deal context, political dynamics, competitive situation, why this matters..."></textarea>
+            </div>
+
+            <div class="checkbox-grid">
+              <label class="checkbox-card">
+                <input type="checkbox" name="justification" value="well-known-brand">
+                <div class="card-content">
+                  <strong>Well-Known Brand</strong>
+                  <span>High-profile logo</span>
+                </div>
+              </label>
+              <label class="checkbox-card">
+                <input type="checkbox" name="justification" value="strategic-imperative">
+                <div class="card-content">
+                  <strong>Strategic Imperative</strong>
+                  <span>Key company initiative</span>
+                </div>
+              </label>
+              <label class="checkbox-card">
+                <input type="checkbox" name="justification" value="competitive-boxout">
+                <div class="card-content">
+                  <strong>Competitive Boxout</strong>
+                  <span>Head-to-head deal</span>
+                </div>
+              </label>
+              <label class="checkbox-card">
+                <input type="checkbox" name="justification" value="expansion-potential">
+                <div class="card-content">
+                  <strong>Large Expansion Potential</strong>
+                  <span>Big upside if we land</span>
+                </div>
+              </label>
+              <label class="checkbox-card">
+                <input type="checkbox" name="justification" value="exec-sponsorship">
+                <div class="card-content">
+                  <strong>Executive Sponsorship</strong>
+                  <span>C-level / VP engaged</span>
+                </div>
+              </label>
+              <label class="checkbox-card">
+                <input type="checkbox" name="justification" value="reference-potential">
+                <div class="card-content">
+                  <strong>Reference Potential</strong>
+                  <span>Case study candidate</span>
+                </div>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <!-- SUBMIT -->
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary btn-lg" id="submit-btn">
+            <span class="btn-text">Submit &amp; Generate Brief</span>
+            <span class="btn-spinner hidden"></span>
+          </button>
+        </div>
+
+        <div class="form-footer">
+          <p>After you submit, we'll automatically pull data from these sources:</p>
+          <div class="source-row">
+            <span class="source-badge src-sfdc">Salesforce</span>
+            <span class="source-badge src-slack">Slack</span>
+            <span class="source-badge src-granola">Granola</span>
+            <span class="source-badge src-glean">Glean</span>
+            <span class="source-badge src-gdrive">Google Drive</span>
+            <span class="source-badge src-outreach">Outreach / Kaia</span>
+          </div>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <!-- PAGE 2: REQUEST TRACKER -->
+  <main id="page-tracker" class="page">
+    <div class="container container-wide">
+      <div class="form-header">
+        <div class="tracker-header-row">
+          <div>
+            <h1>Request Tracker</h1>
+            <p class="subtitle">All VC support requests with triage verdicts, assignments, and status.</p>
+          </div>
+          <button class="btn btn-secondary" id="export-tracker-btn">📥 Export to Excel</button>
+        </div>
+      </div>
+
+      <!-- Tracker Metrics -->
+      <div class="tracker-metrics" id="tracker-metrics"></div>
+
+      <div class="tracker-controls">
+        <div class="search-box">
+          <input type="text" id="tracker-search" placeholder="Search by account, AE, VC, or deal type...">
+        </div>
+        <div class="vc-filter">
+          <select id="vc-filter">
+            <option value="all">All VCs</option>
+          </select>
+        </div>
+        <div class="filter-pills">
+          <button class="pill active" data-filter="all">All</button>
+          <button class="pill" data-filter="submitted">Submitted</button>
+          <button class="pill" data-filter="in-review">In Review</button>
+          <button class="pill" data-filter="accepted">Accepted</button>
+          <button class="pill" data-filter="in-progress">In Progress</button>
+          <button class="pill" data-filter="completed">Completed</button>
+          <button class="pill" data-filter="on-hold">On Hold</button>
+        </div>
+      </div>
+
+      <div id="tracker-cards">
+        <!-- Rendered by JS as cards instead of table for better readability -->
+      </div>
+      <div id="empty-state" class="empty-state hidden">
+        <p>No requests found.</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- PAGE 3: ANALYTICS DASHBOARD -->
+  <main id="page-analytics" class="page">
+    <div class="container container-wide">
+      <div class="form-header">
+        <div class="analytics-header-row">
+          <div>
+            <h1>VC Analytics</h1>
+            <p class="subtitle">Performance metrics, deal outcomes, and team insights across all VC engagements.</p>
+          </div>
+          <div class="export-data-buttons">
+            <button class="btn btn-secondary" id="export-json-btn">📥 Export JSON</button>
+            <button class="btn btn-secondary" id="export-csv-btn">📥 Export CSV</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Filters Bar -->
+      <div id="analytics-filter-bar" class="analytics-filter-bar hidden"></div>
+
+      <!-- Summary Cards -->
+      <div class="analytics-summary" id="analytics-summary">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Charts Row 1: Win Rate + Deal Delta -->
+      <div class="analytics-row">
+        <div class="analytics-card" id="analytics-outcomes">
+          <h3 class="analytics-card-title">Deal Outcomes</h3>
+          <div class="analytics-card-body"></div>
+        </div>
+        <div class="analytics-card" id="analytics-deal-delta">
+          <h3 class="analytics-card-title">Deal Delta</h3>
+          <div class="analytics-card-body"></div>
+        </div>
+      </div>
+
+      <!-- Charts Row 2: By VC + By Region/Segment -->
+      <div class="analytics-row">
+        <div class="analytics-card" id="analytics-by-vc">
+          <h3 class="analytics-card-title">By Value Consultant</h3>
+          <div class="analytics-card-body"></div>
+        </div>
+        <div class="analytics-card" id="analytics-by-deal-type">
+          <h3 class="analytics-card-title">By Deal Type</h3>
+          <div class="analytics-card-body"></div>
+        </div>
+      </div>
+
+      <!-- Charts Row 3: By Industry + Time Estimates -->
+      <div class="analytics-row">
+        <div class="analytics-card" id="analytics-by-industry">
+          <h3 class="analytics-card-title">By Industry</h3>
+          <div class="analytics-card-body"></div>
+        </div>
+        <div class="analytics-card" id="analytics-time-estimates">
+          <h3 class="analytics-card-title">Time Estimate Distribution</h3>
+          <div class="analytics-card-body"></div>
+        </div>
+      </div>
+
+      <!-- Charts Row 4: Triage + Use Case Themes -->
+      <div class="analytics-row">
+        <div class="analytics-card" id="analytics-triage">
+          <h3 class="analytics-card-title">Triage Verdicts</h3>
+          <div class="analytics-card-body"></div>
+        </div>
+        <div class="analytics-card" id="analytics-use-cases">
+          <h3 class="analytics-card-title">Top Use Case Themes</h3>
+          <div class="analytics-card-body"></div>
+        </div>
+      </div>
+
+      <!-- All Requests Table -->
+      <div class="analytics-card analytics-full-width" id="analytics-table">
+        <h3 class="analytics-card-title">All Requests</h3>
+        <div class="analytics-card-body"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Detail Modal -->
+  <div id="detail-modal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content modal-wide">
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- Processing Modal -->
+  <div id="processing-modal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content modal-processing">
+      <div id="processing-body">
+        <h2>Generating VC Intake Brief</h2>
+        <p class="processing-account" id="processing-account"></p>
+        <div class="processing-steps" id="processing-steps">
+          <!-- Steps rendered by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="mock-data.js?v=9"></script>
+  <script src="app.js?v=9"></script>
+</body>
+</html>
