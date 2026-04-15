@@ -43,6 +43,18 @@ const MOCK_OUTCOMES = {
     outcome: "lost",
     closedArr: 0,
     closeDate: "2026-12-01"
+  },
+  "Airbnb": {
+    closed: true,
+    outcome: "expanded",
+    closedArr: 920000,
+    closeDate: "2026-10-20"
+  },
+  "Coinbase": {
+    closed: true,
+    outcome: "renewed",
+    closedArr: 750000,
+    closeDate: "2026-09-28"
   }
 };
 
@@ -209,6 +221,106 @@ const MOCK_ACCOUNTS = [
     champion: "Olivia Park",
     championRole: "Head of Growth",
     contacts: ["Olivia Park", "Daniel Kim", "Sophie Martin"]
+  },
+  {
+    name: "Airbnb",
+    ae: "Sarah Mitchell",
+    se: "Ryan Chen",
+    region: "NAMER",
+    industry: "Media / Travel",
+    dealType: "expansion",
+    sfdcLink: "https://amplitude.my.salesforce.com/006VH00000uvw234",
+    oppName: "Airbnb | Expansion | Guest Experience & Host Marketplace Analytics",
+    arr: "850000",
+    dealStage: "3 – Discovery",
+    expectedClose: "2026-10-15",
+    healthScore: 78,
+    customerSince: "2023-01-15",
+    renewalDate: "2027-01-15",
+    renewalArr: "480000",
+    champion: "David Park",
+    championRole: "VP Product Analytics",
+    contacts: ["David Park", "Mei Lin", "Carlos Rivera", "Tanya Gupta"]
+  },
+  {
+    name: "Shopify",
+    ae: "Tyler Brooks",
+    se: "James O'Brien",
+    region: "NAMER",
+    industry: "E-Commerce / SaaS",
+    dealType: "land",
+    sfdcLink: "https://amplitude.my.salesforce.com/006VH00000xyz567",
+    oppName: "Shopify | Land | Merchant Analytics & Checkout Optimization",
+    arr: "450000",
+    dealStage: "2 – Qualification",
+    expectedClose: "2026-11-30",
+    healthScore: 52,
+    customerSince: null,
+    renewalDate: null,
+    renewalArr: null,
+    champion: "Lena Torres",
+    championRole: "Director of Growth",
+    contacts: ["Lena Torres", "Matt Hensley", "Priya Sharma"]
+  },
+  {
+    name: "BMW",
+    ae: "Marcus Weber",
+    se: "Aisha Patel",
+    region: "EMEA",
+    industry: "Automotive",
+    dealType: "land",
+    sfdcLink: "https://amplitude.my.salesforce.com/006VH00000abc890",
+    oppName: "BMW | Land | Connected Vehicle & Digital Showroom Analytics",
+    arr: "620000",
+    dealStage: "2 – Qualification",
+    expectedClose: "2026-12-20",
+    healthScore: 40,
+    customerSince: null,
+    renewalDate: null,
+    renewalArr: null,
+    champion: "Klaus Fischer",
+    championRole: "Head of Digital Experience",
+    contacts: ["Klaus Fischer", "Anna Berger", "Thomas Müller", "Sophie Kraus"]
+  },
+  {
+    name: "Notion",
+    ae: "Lauren Park",
+    se: "Emily Sato",
+    region: "NAMER",
+    industry: "SaaS / Productivity",
+    dealType: "expansion",
+    sfdcLink: "https://amplitude.my.salesforce.com/006VH00000def123",
+    oppName: "Notion | Expansion | Workspace Collaboration & PLG Funnel Analytics",
+    arr: "380000",
+    dealStage: "3 – Discovery",
+    expectedClose: "2026-09-30",
+    healthScore: 71,
+    customerSince: "2024-06-01",
+    renewalDate: "2027-06-01",
+    renewalArr: "220000",
+    champion: "Amy Chen",
+    championRole: "Head of Growth",
+    contacts: ["Amy Chen", "Jordan Reeves", "Samira Okafor"]
+  },
+  {
+    name: "Coinbase",
+    ae: "David Kim",
+    se: "Brian Choi",
+    region: "NAMER",
+    industry: "Financial Services / Crypto",
+    dealType: "renewal",
+    sfdcLink: "https://amplitude.my.salesforce.com/006VH00000ghi456",
+    oppName: "Coinbase | Renewal | Trading Experience & Compliance Analytics",
+    arr: "700000",
+    dealStage: "4 – Proposal",
+    expectedClose: "2026-09-30",
+    healthScore: 65,
+    customerSince: "2022-04-01",
+    renewalDate: "2026-10-01",
+    renewalArr: "700000",
+    champion: "Jason Liu",
+    championRole: "VP of Product",
+    contacts: ["Jason Liu", "Rebecca Tran", "Omar Hassan", "Nate Gibbons"]
   }
 ];
 
@@ -379,6 +491,202 @@ const MOCK_KAIA = {
         businessImpact: "Team-based accounts have 4x higher LTV than individual accounts"
       }
     ]
+  },
+  "Airbnb": {
+    callCount: 4,
+    dateRange: "Feb 2026 – Apr 2026",
+    summary: "Four calls with product analytics team. David Park driving expansion into guest experience measurement and host marketplace optimization. Strong exec alignment.",
+    signals: [
+      {
+        theme: "Guest Experience Analytics & Personalization",
+        type: "pain",
+        text: "We can't connect guest search behavior to booking outcomes. Our recommendation engine is basically a black box — we know what guests book but not why they abandon.",
+        stakeholder: "David Park (VP Product Analytics)",
+        date: "2026-03-18",
+        url: "https://app.outreach.io/meetings/rec_airbnb_001",
+        verbatim: true,
+        businessImpact: "Search-to-book conversion is 2.1% vs. 3.5% industry benchmark — each 0.1% improvement = ~$45M revenue",
+        userImpact: "Guests see irrelevant listings, leading to high bounce rates on search results pages",
+        internalImpact: "Search and recommendation teams operate on different data stacks with no shared behavioral layer",
+        proposedSolution: "End-to-end behavioral analytics connecting search patterns, listing interactions, and booking outcomes",
+        valueHyp: "Improving search-to-book conversion by 0.5% through data-driven personalization could drive $200M+ in incremental bookings"
+      },
+      {
+        theme: "Host Marketplace Optimization",
+        type: "priority",
+        text: "Host retention is our biggest growth lever. We're losing 18% of hosts annually and can't identify churn signals early enough to intervene.",
+        stakeholder: "Mei Lin",
+        date: "2026-04-02",
+        url: "https://app.outreach.io/meetings/rec_airbnb_002",
+        verbatim: true,
+        businessImpact: "Each retained host generates avg $12K/yr in platform revenue; 18% churn = ~$300M annual revenue at risk",
+        userImpact: "Hosts feel unsupported — pricing tools and performance dashboards are disconnected from actual booking behavior"
+      },
+      {
+        theme: "Experience Quality Measurement",
+        type: "initiative",
+        text: "We're launching a new 'Experience Quality Score' initiative. Need behavioral data to complement review scores — reviews lag by weeks, we need real-time signals.",
+        stakeholder: "David Park (VP Product Analytics)",
+        date: "2026-04-10",
+        url: "https://app.outreach.io/meetings/rec_airbnb_003",
+        businessImpact: "Quality scores directly impact search ranking and Superhost status — fundamental to marketplace health"
+      }
+    ]
+  },
+  "Shopify": {
+    callCount: 2,
+    dateRange: "Mar 2026 – Apr 2026",
+    summary: "Two discovery calls with growth team. Lena Torres focused on merchant analytics gaps and checkout conversion measurement.",
+    signals: [
+      {
+        theme: "Merchant Analytics & Storefront Optimization",
+        type: "pain",
+        text: "Our merchants are asking us for better analytics on their storefronts, but we can't even measure our own admin experience properly. We're building analytics for merchants while flying blind internally.",
+        stakeholder: "Lena Torres (Director of Growth)",
+        date: "2026-03-25",
+        url: "https://app.outreach.io/meetings/rec_shopify_001",
+        verbatim: true,
+        businessImpact: "Merchant-facing analytics is a key differentiator vs. BigCommerce and WooCommerce — directly impacts merchant retention",
+        userImpact: "Merchants churn when they can't see ROI from their Shopify investment; analytics gaps cited in 34% of churn surveys",
+        internalImpact: "Product team rebuilds analytics dashboards quarterly because they can't trust existing data",
+        proposedSolution: "Behavioral analytics platform for both internal product teams and merchant-facing analytics features",
+        valueHyp: "Reducing merchant churn by 2% through better analytics could protect $180M+ in platform GMV"
+      },
+      {
+        theme: "Checkout Conversion Optimization",
+        type: "challenge",
+        text: "Shop Pay conversion is 12% higher than standard checkout but we can't pinpoint which UX elements drive the difference. Need granular behavioral comparison.",
+        stakeholder: "Matt Hensley",
+        date: "2026-04-08",
+        url: "https://app.outreach.io/meetings/rec_shopify_002",
+        businessImpact: "Checkout conversion directly impacts merchant GMV and Shopify's take rate",
+        userImpact: "Buyers experience friction in non-Shop-Pay flows but root cause is unknown"
+      }
+    ]
+  },
+  "BMW": {
+    callCount: 3,
+    dateRange: "Jan 2026 – Mar 2026",
+    summary: "Three calls with digital experience team in Munich. Klaus Fischer leading connected vehicle UX and digital showroom analytics initiative. Complex procurement process.",
+    signals: [
+      {
+        theme: "Connected Vehicle UX Analytics",
+        type: "pain",
+        text: "We have 2 million connected vehicles generating telemetry data, but zero visibility into how drivers interact with our infotainment software. OTA updates are deployed without any behavioral validation.",
+        stakeholder: "Klaus Fischer (Head of Digital Experience)",
+        date: "2026-02-15",
+        url: "https://app.outreach.io/meetings/rec_bmw_001",
+        verbatim: true,
+        businessImpact: "Connected services subscription revenue is projected at EUR 1B by 2028 — product decisions are made without user data",
+        userImpact: "Drivers report frustration with infotainment UX; J.D. Power ranks BMW below Mercedes and Audi on in-vehicle tech satisfaction",
+        internalImpact: "Software team deploys 6 OTA updates/year with no way to measure feature adoption or UX impact",
+        proposedSolution: "In-vehicle behavioral analytics to measure driver interactions with infotainment, navigation, and connected services",
+        valueHyp: "Improving connected services adoption from 35% to 50% could drive EUR 200M+ in incremental subscription revenue"
+      },
+      {
+        theme: "Digital Showroom & Configurator Analytics",
+        type: "priority",
+        text: "Our online configurator has 40 million sessions per year but we lose 70% of users before they complete a configuration. We need to understand the drop-off journey.",
+        stakeholder: "Anna Berger",
+        date: "2026-03-05",
+        url: "https://app.outreach.io/meetings/rec_bmw_002",
+        verbatim: true,
+        businessImpact: "Each completed configuration that reaches a dealer = EUR 800 in qualified lead value; 70% drop-off is massive leakage",
+        userImpact: "Customers find the configurator overwhelming — too many options without guided discovery"
+      },
+      {
+        theme: "Cross-Channel Customer Journey",
+        type: "initiative",
+        text: "We need to connect the digital-to-dealer journey. A customer configures online, visits a showroom, then completes purchase — we have no visibility across these touchpoints.",
+        stakeholder: "Klaus Fischer (Head of Digital Experience)",
+        date: "2026-03-20",
+        url: "https://app.outreach.io/meetings/rec_bmw_003",
+        businessImpact: "60% of buyers research online before visiting a dealer but BMW can't attribute digital touchpoints to sales"
+      }
+    ]
+  },
+  "Notion": {
+    callCount: 3,
+    dateRange: "Mar 2026 – Apr 2026",
+    summary: "Three calls with growth team. Amy Chen driving expansion into workspace collaboration analytics and PLG funnel measurement. Strong product-led motion.",
+    signals: [
+      {
+        theme: "Workspace Collaboration Analytics",
+        type: "pain",
+        text: "We know team workspaces are our growth engine but we can't measure collaboration depth. Page views aren't enough — we need to understand editing patterns, comment threads, and real-time co-editing behavior.",
+        stakeholder: "Amy Chen (Head of Growth)",
+        date: "2026-03-22",
+        url: "https://app.outreach.io/meetings/rec_notion_001",
+        verbatim: true,
+        businessImpact: "Teams with high collaboration scores retain at 95%+ vs. 60% for low-collaboration teams — but we can't identify at-risk teams early",
+        userImpact: "Teams underutilize collaboration features because onboarding doesn't surface them effectively",
+        internalImpact: "Growth team relies on basic DAU/MAU metrics that don't capture collaboration quality",
+        proposedSolution: "Behavioral analytics to measure collaboration depth, team activation patterns, and feature discovery",
+        valueHyp: "Improving team activation from 45% to 60% could drive $25M+ in expansion ARR from existing accounts"
+      },
+      {
+        theme: "PLG Funnel Optimization",
+        type: "priority",
+        text: "Our free-to-team conversion is 4.8% but we believe the ceiling is 8%+. We need to identify the 'aha moments' that predict team plan upgrades.",
+        stakeholder: "Jordan Reeves",
+        date: "2026-04-05",
+        url: "https://app.outreach.io/meetings/rec_notion_002",
+        verbatim: true,
+        businessImpact: "Each 1% improvement in free-to-team conversion = ~$18M ARR impact",
+        userImpact: "Free users don't discover team features organically — the path to 'aha' is unclear"
+      },
+      {
+        theme: "AI Feature Adoption & Impact",
+        type: "initiative",
+        text: "We just launched Notion AI and adoption is uneven. Need to understand which AI features drive retention vs. which are novelty. This is a board-level priority.",
+        stakeholder: "Amy Chen (Head of Growth)",
+        date: "2026-04-12",
+        url: "https://app.outreach.io/meetings/rec_notion_003",
+        businessImpact: "Notion AI is a $10/user/month add-on — adoption directly impacts revenue per user"
+      }
+    ]
+  },
+  "Coinbase": {
+    callCount: 3,
+    dateRange: "Feb 2026 – Apr 2026",
+    summary: "Three calls covering renewal value realization and new compliance dashboard needs. Jason Liu wants to expand scope while securing renewal.",
+    signals: [
+      {
+        theme: "Trading Experience Analytics",
+        type: "pain",
+        text: "We've been using Amplitude for 4 years but we're only scratching the surface on trading UX. During the last crypto cycle, we couldn't correlate market volatility with user behavior patterns fast enough.",
+        stakeholder: "Jason Liu (VP of Product)",
+        date: "2026-03-10",
+        url: "https://app.outreach.io/meetings/rec_coinbase_001",
+        verbatim: true,
+        businessImpact: "Trading revenue dropped 40% during the last downturn; better UX during volatile periods could retain $50M+ in trading volume",
+        userImpact: "Retail traders panic-sell during volatility because the UX amplifies fear rather than providing clarity",
+        internalImpact: "Product team was reactive during the last cycle — no behavioral playbook for high-volatility periods",
+        proposedSolution: "Real-time behavioral analytics with volatility-correlated dashboards and user segment monitoring",
+        valueHyp: "Retaining 5% more trading volume during volatile periods through UX optimization could protect $100M+ in annual revenue"
+      },
+      {
+        theme: "Regulatory Compliance Dashboards",
+        type: "priority",
+        text: "SEC and state regulators are requiring us to demonstrate user comprehension of risk disclosures. We need behavioral proof that users actually read and understand what they're agreeing to.",
+        stakeholder: "Rebecca Tran",
+        date: "2026-03-28",
+        url: "https://app.outreach.io/meetings/rec_coinbase_002",
+        verbatim: true,
+        businessImpact: "Non-compliance risks fines of $50M+ and potential trading restrictions in key states",
+        userImpact: "Users click through risk disclosures in under 3 seconds — regulators want proof of informed consent",
+        internalImpact: "Legal team manually audits disclosure interactions quarterly; process takes 6 weeks"
+      },
+      {
+        theme: "Onboarding & KYC Funnel Optimization",
+        type: "challenge",
+        text: "Our KYC completion rate is 62%. We lose nearly 40% of users during identity verification. Compliance constraints limit what we can change, but we need to optimize within those bounds.",
+        stakeholder: "Omar Hassan",
+        date: "2026-04-08",
+        url: "https://app.outreach.io/meetings/rec_coinbase_003",
+        businessImpact: "Each 1% improvement in KYC completion = ~$8M in first-year trading revenue from new users"
+      }
+    ]
   }
 };
 
@@ -466,6 +774,164 @@ const MOCK_SLACK = {
         stakeholder: "Olivia Park"
       }
     ]
+  },
+  "Airbnb": {
+    threadCount: 7,
+    channels: ["#airbnb-deal-room", "#travel-marketplace-deals", "#strategic-accounts"],
+    summary: "Seven threads with strong momentum. David Park has VP-level sponsorship and budget approval. Guest experience analytics identified as top priority for H2 2026.",
+    signals: [
+      {
+        theme: "Guest Experience Analytics & Personalization",
+        type: "priority",
+        text: "AE confirmed David Park has CEO-level visibility on the guest experience initiative. This was called out in Airbnb's Q1 earnings as a key investment area.",
+        date: "2026-04-05",
+        url: "https://amplitude.slack.com/archives/C_airbnb_001/p1712300000",
+        stakeholder: "Sarah Mitchell (AE, internal note)"
+      },
+      {
+        theme: "Host Marketplace Optimization",
+        type: "pain",
+        text: "Airbnb's host success team shared internal data showing hosts who churn cost 3x more to replace than retain. They're desperate for early warning signals.",
+        date: "2026-04-01",
+        url: "https://amplitude.slack.com/archives/C_airbnb_002/p1711900000"
+      },
+      {
+        theme: "Guest Experience Analytics & Personalization",
+        type: "challenge",
+        text: "Competitive note: Airbnb is also evaluating Mixpanel for the guest analytics use case. David Park favors Amplitude but needs a strong business case to justify the larger investment.",
+        date: "2026-03-28",
+        url: "https://amplitude.slack.com/archives/C_airbnb_003/p1711600000"
+      }
+    ]
+  },
+  "Shopify": {
+    threadCount: 4,
+    channels: ["#shopify-deal-room", "#ecommerce-deals"],
+    summary: "Four threads in early-stage deal room. Lena Torres is engaged but procurement process at Shopify is lengthy. Competitive with Heap.",
+    signals: [
+      {
+        theme: "Merchant Analytics & Storefront Optimization",
+        type: "challenge",
+        text: "AE flagged that Shopify's data platform team has concerns about Amplitude's data residency for Canadian merchants. Need to address before deal progresses.",
+        date: "2026-04-02",
+        url: "https://amplitude.slack.com/archives/C_shopify_001/p1712000000",
+        stakeholder: "Tyler Brooks (AE, internal note)"
+      },
+      {
+        theme: "Checkout Conversion Optimization",
+        type: "priority",
+        text: "Lena mentioned in last call that checkout conversion is a KPI tied to her team's bonus structure. High personal motivation to solve this.",
+        date: "2026-03-30",
+        url: "https://amplitude.slack.com/archives/C_shopify_002/p1711800000",
+        stakeholder: "Lena Torres"
+      },
+      {
+        theme: "Merchant Analytics & Storefront Optimization",
+        type: "pain",
+        text: "Shopify currently using Heap for some use cases. Lena says it lacks the funnel depth and cohort analysis they need for merchant retention analytics.",
+        date: "2026-04-10",
+        url: "https://amplitude.slack.com/archives/C_shopify_003/p1712700000"
+      }
+    ]
+  },
+  "BMW": {
+    threadCount: 5,
+    channels: ["#bmw-deal-room", "#emea-deals", "#automotive-vertical"],
+    summary: "Five threads across EMEA deal channels. Complex enterprise procurement with multiple stakeholders. Ali Bhamani assigned as VC lead for EMEA.",
+    signals: [
+      {
+        theme: "Connected Vehicle UX Analytics",
+        type: "challenge",
+        text: "BMW's IT security team requires all analytics vendors to complete a 12-week security audit. This could push the timeline. Ali flagging to get ahead of it.",
+        date: "2026-03-15",
+        url: "https://amplitude.slack.com/archives/C_bmw_001/p1710500000",
+        stakeholder: "Ali Bhamani (VC, internal note)"
+      },
+      {
+        theme: "Digital Showroom & Configurator Analytics",
+        type: "priority",
+        text: "AE shared that BMW's board approved a EUR 50M digital transformation budget for 2026-2027. Analytics tooling is a line item in that budget.",
+        date: "2026-03-22",
+        url: "https://amplitude.slack.com/archives/C_bmw_002/p1711100000",
+        stakeholder: "Marcus Weber (AE, internal note)"
+      },
+      {
+        theme: "Connected Vehicle UX Analytics",
+        type: "pain",
+        text: "Klaus Fischer told AE that Tesla's ability to iterate on in-car UX via OTA updates with data-driven decisions is a competitive threat BMW's board discusses quarterly.",
+        date: "2026-03-28",
+        url: "https://amplitude.slack.com/archives/C_bmw_003/p1711600000",
+        stakeholder: "Klaus Fischer"
+      }
+    ]
+  },
+  "Notion": {
+    threadCount: 5,
+    channels: ["#notion-account", "#plg-deals", "#saas-vertical"],
+    summary: "Five threads tracking expansion. Amy Chen is a strong champion with growth team autonomy. PLG funnel and AI adoption are the two primary workstreams.",
+    signals: [
+      {
+        theme: "Workspace Collaboration Analytics",
+        type: "priority",
+        text: "Amy Chen shared that Notion's CEO cited collaboration depth as the #1 metric for the product team in the last all-hands. This has top-of-house visibility.",
+        date: "2026-04-01",
+        url: "https://amplitude.slack.com/archives/C_notion_001/p1711900000",
+        stakeholder: "Amy Chen"
+      },
+      {
+        theme: "PLG Funnel Optimization",
+        type: "pain",
+        text: "AE noted that Notion is frustrated with their current Mixpanel setup — migration to Amplitude's existing deployment is easier than they expected.",
+        date: "2026-04-08",
+        url: "https://amplitude.slack.com/archives/C_notion_002/p1712500000",
+        stakeholder: "Lauren Park (AE, internal note)"
+      },
+      {
+        theme: "AI Feature Adoption & Impact",
+        type: "initiative",
+        text: "Notion AI launch is getting heavy press coverage. Amy's team is under pressure to show adoption metrics to the board within 90 days. Urgent timeline.",
+        date: "2026-04-12",
+        url: "https://amplitude.slack.com/archives/C_notion_003/p1712900000"
+      }
+    ]
+  },
+  "Coinbase": {
+    threadCount: 6,
+    channels: ["#coinbase-renewal", "#fintech-deals", "#customer-success"],
+    summary: "Six threads across renewal and deal channels. Jason Liu pushing to expand scope during renewal. Compliance dashboard is a new requirement driving urgency.",
+    signals: [
+      {
+        theme: "Trading Experience Analytics",
+        type: "pain",
+        text: "CSM shared that Coinbase's product team built internal dashboards on top of Amplitude but they're hitting scale limits. Need professional services or expanded deployment.",
+        date: "2026-03-20",
+        url: "https://amplitude.slack.com/archives/C_coinbase_001/p1711000000",
+        stakeholder: "Jason Liu"
+      },
+      {
+        theme: "Regulatory Compliance Dashboards",
+        type: "priority",
+        text: "AE flagged: SEC inquiry is creating urgency for the compliance dashboard use case. Coinbase legal team now involved in the renewal conversation — they want this in the contract.",
+        date: "2026-04-05",
+        url: "https://amplitude.slack.com/archives/C_coinbase_002/p1712300000",
+        stakeholder: "David Kim (AE, internal note)"
+      },
+      {
+        theme: "Onboarding & KYC Funnel Optimization",
+        type: "challenge",
+        text: "Coinbase considering building KYC analytics in-house vs. using Amplitude. Internal platform team is pushing build, product team wants buy. Classic tension.",
+        date: "2026-04-10",
+        url: "https://amplitude.slack.com/archives/C_coinbase_003/p1712700000"
+      },
+      {
+        theme: "Trading Experience Analytics",
+        type: "initiative",
+        text: "Jason Liu mentioned they want to use Amplitude for their upcoming Base (L2) wallet experience. Could be a significant expansion vector beyond the renewal.",
+        date: "2026-04-12",
+        url: "https://amplitude.slack.com/archives/C_coinbase_004/p1712900000",
+        stakeholder: "Jason Liu"
+      }
+    ]
   }
 };
 
@@ -549,6 +1015,108 @@ const MOCK_GRANOLA = {
         businessImpact: "Land and expand opportunity — growth team adoption could lead to full org rollout at $1M+ ARR"
       }
     ]
+  },
+  "Airbnb": {
+    meetingCount: 3,
+    summary: "Three meetings covering expansion strategy and guest experience analytics scoping. Kevin Colston attended the account planning session.",
+    signals: [
+      {
+        theme: "Guest Experience Analytics & Personalization",
+        type: "priority",
+        text: "Account plan notes: Airbnb's current Amplitude deployment covers core booking flow. Expansion opportunity is guest experience and host-side analytics — total addressable could reach $1.2M ARR.",
+        date: "2026-03-15",
+        url: "https://app.granola.ai/notes/airbnb_001",
+        businessImpact: "Expansion from $480K to $850K+ with potential for further growth into host analytics"
+      },
+      {
+        theme: "Host Marketplace Optimization",
+        type: "initiative",
+        text: "Deal strategy: Host retention use case could be a second phase expansion. If we prove value on guest experience first, host-side analytics is a natural follow-on worth $300K+.",
+        date: "2026-04-05",
+        url: "https://app.granola.ai/notes/airbnb_002",
+        businessImpact: "Two-phase expansion strategy creates a clear path to $1M+ total ARR"
+      }
+    ]
+  },
+  "Shopify": {
+    meetingCount: 1,
+    summary: "One account planning session. Identified Shopify as a strategic land with strong expansion potential across merchant analytics.",
+    signals: [
+      {
+        theme: "Merchant Analytics & Storefront Optimization",
+        type: "initiative",
+        text: "Account plan: Shopify's merchant analytics needs span both internal product optimization and merchant-facing analytics features. Land on internal use case, expand to merchant-facing analytics.",
+        date: "2026-03-28",
+        url: "https://app.granola.ai/notes/shopify_001",
+        businessImpact: "Land at $450K with expansion to $1M+ if merchant-facing analytics use case materializes"
+      }
+    ]
+  },
+  "BMW": {
+    meetingCount: 2,
+    summary: "Two meetings including EMEA account planning with Ali Bhamani and deal strategy session. Complex enterprise deal requiring multi-stakeholder alignment.",
+    signals: [
+      {
+        theme: "Connected Vehicle UX Analytics",
+        type: "priority",
+        text: "EMEA account plan: BMW is the largest automotive opportunity in the pipeline. Klaus Fischer has budget authority but needs IT security sign-off. Ali Bhamani leading VC engagement.",
+        date: "2026-02-28",
+        url: "https://app.granola.ai/notes/bmw_001",
+        internalImpact: "First major automotive land in EMEA — could become a vertical reference account"
+      },
+      {
+        theme: "Digital Showroom & Configurator Analytics",
+        type: "challenge",
+        text: "Deal strategy: BMW's procurement process involves 4 approval gates. Need to front-load the business case to survive internal review cycles. Security audit is the highest-risk gate.",
+        date: "2026-03-15",
+        url: "https://app.granola.ai/notes/bmw_002",
+        businessImpact: "If BMW lands, it opens the door to other German automotive OEMs through Klaus's network"
+      }
+    ]
+  },
+  "Notion": {
+    meetingCount: 2,
+    summary: "Two meetings covering expansion strategy. Amy Chen is a power user who already advocates internally for Amplitude. PLG and AI analytics are the two expansion vectors.",
+    signals: [
+      {
+        theme: "Workspace Collaboration Analytics",
+        type: "initiative",
+        text: "Strategy notes: Amy Chen already uses Amplitude daily for core product metrics. Expansion is about deepening usage into collaboration analytics and AI feature measurement — low adoption risk.",
+        date: "2026-03-30",
+        url: "https://app.granola.ai/notes/notion_001",
+        businessImpact: "Champion-led expansion with low risk — Amy's team already has Amplitude expertise"
+      },
+      {
+        theme: "AI Feature Adoption & Impact",
+        type: "priority",
+        text: "Deal review: Notion AI measurement is time-sensitive — board wants adoption data within 90 days. This urgency could accelerate the expansion timeline.",
+        date: "2026-04-10",
+        url: "https://app.granola.ai/notes/notion_002",
+        businessImpact: "AI measurement urgency could compress deal cycle from 6 months to 3 months"
+      }
+    ]
+  },
+  "Coinbase": {
+    meetingCount: 2,
+    summary: "Two renewal strategy sessions. Jason Liu wants to expand during renewal. Compliance dashboard is a new vector that could increase deal size by $100K+.",
+    signals: [
+      {
+        theme: "Trading Experience Analytics",
+        type: "priority",
+        text: "Renewal planning: Coinbase has 280 monthly active Amplitude users across 6 product teams. Deep adoption, but Jason Liu says they need to unlock more value from the platform.",
+        date: "2026-03-15",
+        url: "https://app.granola.ai/notes/coinbase_001",
+        internalImpact: "High adoption = strong retention signal, but value narrative is needed for CFO approval of expanded scope"
+      },
+      {
+        theme: "Regulatory Compliance Dashboards",
+        type: "initiative",
+        text: "Deal strategy: Compliance dashboard use case is net-new and could add $100-150K to the renewal. Legal team involvement accelerates procurement because compliance has its own budget line.",
+        date: "2026-04-02",
+        url: "https://app.granola.ai/notes/coinbase_002",
+        businessImpact: "Compliance budget is separate from product analytics budget — could expand total deal size to $800K+"
+      }
+    ]
   }
 };
 
@@ -622,6 +1190,139 @@ const MOCK_GLEAN = {
         date: "2026-03-05",
         url: "https://app.getglean.com/search/doc_figma_001",
         businessImpact: "Clear benchmarking gap provides strong outside-in value narrative"
+      }
+    ]
+  },
+  "Airbnb": {
+    docCount: 4,
+    summary: "Found account plan, travel/marketplace analytics playbook, prior engagement summary, and guest experience benchmark report.",
+    signals: [
+      {
+        theme: "Guest Experience Analytics & Personalization",
+        type: "priority",
+        text: "Travel industry benchmark report shows top OTAs achieve 3.5-4.2% search-to-book conversion. Airbnb's 2.1% is significantly below peer average.",
+        date: "2026-02-20",
+        url: "https://app.getglean.com/search/doc_airbnb_001",
+        businessImpact: "Clear benchmarking gap quantifies the personalization opportunity at $500M+ annually"
+      },
+      {
+        theme: "Host Marketplace Optimization",
+        type: "challenge",
+        text: "Prior engagement notes show Airbnb's host analytics team evaluated Amplitude in 2024 but deal stalled due to budget constraints. New budget cycle creates fresh opportunity.",
+        date: "2026-03-05",
+        url: "https://app.getglean.com/search/doc_airbnb_002"
+      },
+      {
+        theme: "Guest Experience Analytics & Personalization",
+        type: "initiative",
+        text: "Account plan documents Airbnb's existing Amplitude deployment: 150 MAUs across booking and payments teams. Expansion adds guest experience and host marketplace teams.",
+        date: "2026-03-20",
+        url: "https://app.getglean.com/search/doc_airbnb_003",
+        internalImpact: "Existing adoption provides strong expansion foundation — lower implementation risk"
+      }
+    ]
+  },
+  "Shopify": {
+    docCount: 3,
+    summary: "Found e-commerce analytics playbook, merchant retention research report, and checkout optimization benchmark study.",
+    signals: [
+      {
+        theme: "Merchant Analytics & Storefront Optimization",
+        type: "priority",
+        text: "E-commerce analytics playbook shows that platforms providing merchant-facing analytics see 25% higher merchant retention. Shopify's merchant churn is a known growth limiter.",
+        date: "2026-03-10",
+        url: "https://app.getglean.com/search/doc_shopify_001",
+        businessImpact: "Merchant retention is Shopify's biggest growth lever — analytics is a proven driver"
+      },
+      {
+        theme: "Checkout Conversion Optimization",
+        type: "challenge",
+        text: "Checkout benchmark study: Shop Pay's 12% conversion advantage over standard checkout aligns with industry data on streamlined payment flows. Amplitude can help quantify and extend this advantage.",
+        date: "2026-03-18",
+        url: "https://app.getglean.com/search/doc_shopify_002",
+        businessImpact: "Checkout optimization impacts Shopify's take rate and merchant satisfaction simultaneously"
+      }
+    ]
+  },
+  "BMW": {
+    docCount: 5,
+    summary: "Found automotive digital transformation playbook, connected vehicle analytics whitepaper, EMEA enterprise deal guide, J.D. Power benchmarks, and configurator conversion research.",
+    signals: [
+      {
+        theme: "Connected Vehicle UX Analytics",
+        type: "priority",
+        text: "Connected vehicle analytics whitepaper: OEMs with in-vehicle behavioral analytics iterate on software 3x faster than those relying on survey data alone. BMW currently relies primarily on surveys.",
+        date: "2026-01-15",
+        url: "https://app.getglean.com/search/doc_bmw_001",
+        businessImpact: "Industry research validates the connected vehicle analytics opportunity and BMW's competitive gap"
+      },
+      {
+        theme: "Digital Showroom & Configurator Analytics",
+        type: "challenge",
+        text: "Configurator conversion research: Automotive configurators with behavioral optimization achieve 40-50% completion rates vs. BMW's 30%. Significant room for improvement.",
+        date: "2026-02-10",
+        url: "https://app.getglean.com/search/doc_bmw_002",
+        businessImpact: "Improving configurator completion from 30% to 40% could generate EUR 100M+ in qualified leads annually"
+      },
+      {
+        theme: "Connected Vehicle UX Analytics",
+        type: "initiative",
+        text: "EMEA enterprise deal guide flags that German automotive OEMs require on-premises or EU-hosted data processing. Amplitude's EU data center is a key enabler.",
+        date: "2026-02-25",
+        url: "https://app.getglean.com/search/doc_bmw_003",
+        internalImpact: "EU data residency is table stakes for BMW — Amplitude's EU hosting removes a common blocker"
+      }
+    ]
+  },
+  "Notion": {
+    docCount: 3,
+    summary: "Found PLG analytics playbook, SaaS collaboration benchmark report, and AI feature adoption framework.",
+    signals: [
+      {
+        theme: "Workspace Collaboration Analytics",
+        type: "priority",
+        text: "SaaS collaboration benchmark: Top-performing collaboration tools see 70%+ team activation rates within 30 days. Notion's current rate is estimated at 45% based on champion feedback.",
+        date: "2026-03-08",
+        url: "https://app.getglean.com/search/doc_notion_001",
+        businessImpact: "Benchmark gap quantifies the team activation opportunity — directly tied to expansion revenue"
+      },
+      {
+        theme: "AI Feature Adoption & Impact",
+        type: "initiative",
+        text: "AI feature adoption framework: Companies that instrument AI features within 60 days of launch see 2x higher retention of AI add-on subscriptions. Timing is critical for Notion.",
+        date: "2026-04-01",
+        url: "https://app.getglean.com/search/doc_notion_002",
+        businessImpact: "Framework supports urgency of Amy Chen's 90-day AI measurement timeline"
+      }
+    ]
+  },
+  "Coinbase": {
+    docCount: 4,
+    summary: "Found fintech analytics playbook, crypto trading UX research, regulatory compliance analytics framework, and prior value realization report.",
+    signals: [
+      {
+        theme: "Trading Experience Analytics",
+        type: "priority",
+        text: "Prior value realization report from 2024: Coinbase attributed $12M in retained trading volume to Amplitude-informed UX improvements during a market correction.",
+        date: "2026-02-01",
+        url: "https://app.getglean.com/search/doc_coinbase_001",
+        businessImpact: "Proven ROI from prior engagement creates strong renewal narrative and expansion justification"
+      },
+      {
+        theme: "Regulatory Compliance Dashboards",
+        type: "challenge",
+        text: "Regulatory compliance analytics framework: Financial services firms using behavioral analytics for compliance reporting reduce audit preparation time by 60-80%. Directly relevant to Coinbase's SEC requirements.",
+        date: "2026-03-01",
+        url: "https://app.getglean.com/search/doc_coinbase_002",
+        businessImpact: "Compliance use case has its own budget line and ROI — not competing with product analytics budget"
+      },
+      {
+        theme: "Onboarding & KYC Funnel Optimization",
+        type: "pain",
+        text: "Crypto trading UX research: Industry KYC completion benchmark is 72-78%. Coinbase's 62% is below average, suggesting significant optimization opportunity.",
+        date: "2026-03-15",
+        url: "https://app.getglean.com/search/doc_coinbase_003",
+        businessImpact: "Below-benchmark KYC completion provides strong outside-in narrative for funnel optimization"
       }
     ]
   }
