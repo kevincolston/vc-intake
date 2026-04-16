@@ -105,13 +105,13 @@ body {
    Form Header
    ============================================================ */
 .form-header {
-  margin-bottom: 32px;
+  margin-bottom: 16px;
 }
 .form-header h1 {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
   color: var(--gray-900);
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 .subtitle {
   font-size: 14px;
@@ -125,15 +125,15 @@ body {
   background: #fff;
   border: 1px solid var(--gray-200);
   border-radius: var(--radius-lg);
-  padding: 24px;
-  margin-bottom: 20px;
+  padding: 18px 20px;
+  margin-bottom: 12px;
   box-shadow: var(--shadow-sm);
 }
 .form-section h2 {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--gray-900);
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   padding-bottom: 10px;
   border-bottom: 1px solid var(--gray-100);
 }
@@ -189,7 +189,7 @@ body {
 /* ============================================================
    Fields
    ============================================================ */
-.field { margin-bottom: 16px; }
+.field { margin-bottom: 12px; }
 .field:last-child { margin-bottom: 0; }
 
 .field label {
@@ -246,6 +246,19 @@ body {
 }
 
 .field textarea { resize: vertical; }
+
+.field-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.field-inline label {
+  margin-bottom: 0;
+  white-space: nowrap;
+}
+.field-inline input[type="date"] {
+  width: auto;
+}
 
 .field-hint {
   display: block;
@@ -324,8 +337,20 @@ body {
 .checkbox-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 16px;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.help-type-grid {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.help-type-grid .card-content span {
+  display: none;
+}
+
+.help-type-grid .checkbox-card {
+  padding: 8px 10px;
 }
 
 .checkbox-card {
@@ -449,7 +474,7 @@ body {
 .form-actions {
   display: flex;
   gap: 12px;
-  padding-top: 8px;
+  padding-top: 4px;
 }
 
 /* Button spinner */
@@ -616,6 +641,43 @@ body {
   background: #fffbeb;
 }
 .tm-action .tm-value { color: #d97706; }
+
+.tm-clickable {
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+  user-select: none;
+}
+.tm-clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* Active metric filter state */
+.tm-card.tm-active {
+  border-width: 2px;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.tm-card.tm-active:not(.tm-open):not(.tm-closed):not(.tm-action) {
+  border-color: var(--gray-900);
+  background: var(--gray-900);
+}
+.tm-card.tm-active:not(.tm-open):not(.tm-closed):not(.tm-action) .tm-value,
+.tm-card.tm-active:not(.tm-open):not(.tm-closed):not(.tm-action) .tm-label {
+  color: #fff;
+}
+.tm-card.tm-open.tm-active {
+  border-color: #1d4ed8;
+  background: #dbeafe;
+}
+.tm-card.tm-closed.tm-active {
+  border-color: #059669;
+  background: #d1fae5;
+}
+.tm-card.tm-action.tm-active {
+  border-color: #d97706;
+  background: #fef3c7;
+}
 
 /* ============================================================
    Tracker Cards
@@ -1792,22 +1854,46 @@ body {
 
 /* Summary Cards */
 .analytics-summary {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  display: flex;
   gap: 12px;
   margin-bottom: 24px;
+  flex-wrap: wrap;
 }
+
+.summary-group {
+  flex: 1;
+  min-width: 160px;
+}
+.summary-group-wide {
+  flex: 2;
+  min-width: 300px;
+}
+
+.summary-group-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--gray-400);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 6px;
+  padding-left: 2px;
+}
+
+.summary-group-cards {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
 .summary-card {
+  flex: 1;
   background: #fff;
   border: 1px solid var(--gray-200);
   border-radius: var(--radius-lg);
-  padding: 16px;
+  min-width: 0;
+  padding: 14px 10px;
   text-align: center;
   box-shadow: var(--shadow-sm);
-}
-.summary-card.summary-highlight {
-  border-color: var(--amp-blue);
-  background: var(--amp-blue-light);
 }
 .summary-card.summary-green {
   border-color: #a7f3d0;
@@ -1817,15 +1903,26 @@ body {
   border-color: #fecaca;
   background: #fef2f2;
 }
+
+.summary-card-arrow {
+  display: flex;
+  align-items: center;
+  font-size: 18px;
+  color: var(--gray-300);
+  font-weight: 300;
+  flex-shrink: 0;
+}
+
 .summary-value {
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 800;
   color: var(--gray-900);
   line-height: 1.2;
   margin-bottom: 4px;
+  white-space: nowrap;
 }
 .summary-label {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   color: var(--gray-500);
   text-transform: uppercase;
@@ -1847,6 +1944,9 @@ body {
   box-shadow: var(--shadow-sm);
 }
 .analytics-card-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 13px;
   font-weight: 700;
   color: var(--gray-700);
@@ -1947,6 +2047,35 @@ body {
   border-top: 1px solid var(--gray-200);
   font-size: 13px;
   color: var(--gray-600);
+}
+
+/* Deal Delta Total Callout */
+.delta-total-callout {
+  text-align: center;
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  margin-bottom: 16px;
+}
+.delta-total-callout.delta-positive {
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  border: 1px solid #a7f3d0;
+}
+.delta-total-callout.delta-negative {
+  background: linear-gradient(135deg, #fef2f2, #fecaca);
+  border: 1px solid #fca5a5;
+}
+.delta-total-value {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.delta-total-callout.delta-positive .delta-total-value { color: #059669; }
+.delta-total-callout.delta-negative .delta-total-value { color: #dc2626; }
+.delta-total-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gray-500);
+  margin-top: 4px;
 }
 
 /* Triage Donut (list style) */
@@ -2141,7 +2270,8 @@ tr.af-active td:first-child {
   .brief-grid { grid-template-columns: 1fr; }
   .scope-grid { grid-template-columns: 1fr; }
   .brief-title-row { flex-direction: column; }
-  .analytics-summary { grid-template-columns: repeat(3, 1fr); }
+  .analytics-summary { flex-direction: column; }
+  .summary-group-wide { flex: 1; min-width: 0; }
   .analytics-row { grid-template-columns: 1fr; }
   .analytics-header-row { flex-direction: column; }
 }
@@ -2149,6 +2279,8 @@ tr.af-active td:first-child {
 @media (max-width: 640px) {
   .field-row { flex-direction: column; gap: 0; }
   .checkbox-grid { grid-template-columns: 1fr; }
+  .help-type-grid { grid-template-columns: 1fr 1fr; }
+  .help-type-grid .card-content span { display: block; }
   .top-nav { padding: 0 16px; }
   .container { padding: 20px 16px 48px; }
   .container-wide { padding: 20px 16px 48px; }
@@ -2157,7 +2289,7 @@ tr.af-active td:first-child {
   .card-bottom-row { flex-direction: column; gap: 10px; align-items: flex-start; }
   .card-controls { width: 100%; }
   .card-meta-row { gap: 8px; }
-  .analytics-summary { grid-template-columns: repeat(2, 1fr); }
+  .analytics-summary { flex-direction: column; }
   .tracker-metrics { grid-template-columns: repeat(2, 1fr); }
   .tracker-header-row { flex-direction: column; }
   .comp-deployed-grid { grid-template-columns: 1fr; }
@@ -2438,6 +2570,8 @@ a.story-title:hover {
   font-weight: 400;
   font-style: normal;
   line-height: 1.5;
+  text-transform: none;
+  letter-spacing: normal;
   border-radius: 8px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.2);
   z-index: 100;

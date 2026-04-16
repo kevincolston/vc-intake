@@ -954,6 +954,30 @@ function populateVcFilter() {
   select.value = current || 'all';
 }
 
+let activeMetricFilter = null; // null | 'all' | 'open' | 'closed' | 'needs-action'
+
+function toggleMetricFilter(filter) {
+  activeMetricFilter = activeMetricFilter === filter ? null : filter;
+  // Reset the status pill filter to "All" when using metric filters
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  document.querySelector('.pill[data-filter="all"]')?.classList.add('active');
+  renderTracker();
+}
+
+function matchesMetricFilter(r) {
+  if (!activeMetricFilter) return true;
+  switch (activeMetricFilter) {
+    case 'all': return true;
+    case 'open': return ['submitted', 'in-review', 'accepted', 'in-progress'].includes(r.status);
+    case 'closed': return r.status === 'completed';
+    case 'needs-action':
+      return r.status === 'submitted' ||
+        (r.status === 'in-review' && r.triage?.verdict === 'needs-review') ||
+        r.status === 'on-hold';
+    default: return true;
+  }
+}
+
 function renderTrackerMetrics() {
   const el = document.getElementById('tracker-metrics');
   if (!el) return;
@@ -961,7 +985,6 @@ function renderTrackerMetrics() {
   const total = requests.length;
   const open = requests.filter(r => ['submitted', 'in-review', 'accepted', 'in-progress'].includes(r.status)).length;
   const closed = requests.filter(r => r.status === 'completed').length;
-  const onHold = requests.filter(r => r.status === 'on-hold').length;
   // "Requires Action" = submitted (not yet reviewed) + needs-review triage + on-hold
   const needsAction = requests.filter(r =>
     r.status === 'submitted' ||
@@ -969,20 +992,22 @@ function renderTrackerMetrics() {
     r.status === 'on-hold'
   ).length;
 
+  const active = (key) => activeMetricFilter === key ? 'tm-active' : '';
+
   el.innerHTML = `
-    <div class="tm-card">
+    <div class="tm-card tm-clickable ${active('all')}" onclick="toggleMetricFilter('all')">
       <div class="tm-value">${total}</div>
       <div class="tm-label">Total Requests</div>
     </div>
-    <div class="tm-card tm-open">
+    <div class="tm-card tm-open tm-clickable ${active('open')}" onclick="toggleMetricFilter('open')">
       <div class="tm-value">${open}</div>
       <div class="tm-label">Open</div>
     </div>
-    <div class="tm-card tm-closed">
+    <div class="tm-card tm-closed tm-clickable ${active('closed')}" onclick="toggleMetricFilter('closed')">
       <div class="tm-value">${closed}</div>
       <div class="tm-label">Closed</div>
     </div>
-    <div class="tm-card tm-action">
+    <div class="tm-card tm-action tm-clickable ${active('needs-action')}" onclick="toggleMetricFilter('needs-action')">
       <div class="tm-value">${needsAction}</div>
       <div class="tm-label">Needs Action</div>
     </div>
@@ -1005,7 +1030,7 @@ function renderTracker() {
     const matchesFilter = activeFilter === 'all' || r.status === activeFilter;
     const matchesVc = vcFilter === 'all' ||
       (vcFilter === 'unassigned' ? !r.assignedVc : r.assignedVc === vcFilter);
-    return matchesSearch && matchesFilter && matchesVc;
+    return matchesSearch && matchesFilter && matchesVc && matchesMetricFilter(r);
   });
 
   const container = document.getElementById('tracker-cards');
@@ -1179,6 +1204,7 @@ document.querySelectorAll('.pill').forEach(pill => {
   pill.addEventListener('click', function () {
     document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
     this.classList.add('active');
+    activeMetricFilter = null; // clear metric filter when using status pills
     renderTracker();
   });
 });
@@ -2612,55 +2638,56 @@ function exportTrackerToExcel() {
 // ============================================================
 
 const analyticsFilters = {
-  outcome: null,    // e.g. 'won', 'expanded', 'pending'
-  vc: null,         // e.g. 'Kevin Colston'
-  dealType: null,   // e.g. 'land', 'expansion'
-  industry: null,   // e.g. 'Financial Services'
-  timeEstimate: null, // e.g. 'MEDIUM-HEAVY'
-  triage: null,     // e.g. 'auto-approved'
-  status: null,     // e.g. 'completed'
-  useCase: null     // e.g. 'Merchant Onboarding Conversion'
+  outcome: [],    // e.g. ['won', 'expanded']
+  vc: [],         // e.g. ['Kevin Colston', 'Rob Helegda']
+  dealType: [],   // e.g. ['land', 'expansion']
+  industry: [],   // e.g. ['Financial Services']
+  timeEstimate: [], // e.g. ['LIGHT', 'MEDIUM']
+  triage: [],     // e.g. ['auto-approved']
+  status: [],     // e.g. ['completed']
+  useCase: []     // e.g. ['Merchant Onboarding Conversion']
 };
 
 function toggleAnalyticsFilter(key, value) {
-  // Toggle: click same value again to clear it
-  if (analyticsFilters[key] === value) {
-    analyticsFilters[key] = null;
+  const arr = analyticsFilters[key];
+  const idx = arr.indexOf(value);
+  if (idx > -1) {
+    arr.splice(idx, 1);  // remove if already selected
   } else {
-    analyticsFilters[key] = value;
+    arr.push(value);      // add to selection
   }
   renderAnalytics();
 }
 
 function clearAllAnalyticsFilters() {
-  Object.keys(analyticsFilters).forEach(k => analyticsFilters[k] = null);
+  Object.keys(analyticsFilters).forEach(k => analyticsFilters[k] = []);
   renderAnalytics();
 }
 
 function getActiveFilterCount() {
-  return Object.values(analyticsFilters).filter(v => v !== null).length;
+  return Object.values(analyticsFilters).reduce((sum, arr) => sum + arr.length, 0);
 }
 
 function applyAnalyticsFilters(data) {
   return data.filter(r => {
-    if (analyticsFilters.outcome) {
-      if (analyticsFilters.outcome === 'pending') {
-        if (r.outcome) return false;
-      } else {
-        if (r.outcome !== analyticsFilters.outcome) return false;
-      }
+    if (analyticsFilters.outcome.length) {
+      const hasPending = analyticsFilters.outcome.includes('pending');
+      const otherOutcomes = analyticsFilters.outcome.filter(v => v !== 'pending');
+      const matchesPending = hasPending && !r.outcome;
+      const matchesOther = otherOutcomes.length > 0 && otherOutcomes.includes(r.outcome);
+      if (!matchesPending && !matchesOther) return false;
     }
-    if (analyticsFilters.vc) {
+    if (analyticsFilters.vc.length) {
       const vc = r.assignedVc || 'Unassigned';
-      if (vc !== analyticsFilters.vc) return false;
+      if (!analyticsFilters.vc.includes(vc)) return false;
     }
-    if (analyticsFilters.dealType && r.dealType !== analyticsFilters.dealType) return false;
-    if (analyticsFilters.industry && (r.industry || 'Unknown') !== analyticsFilters.industry) return false;
-    if (analyticsFilters.timeEstimate && r.triage?.timeEstimate !== analyticsFilters.timeEstimate) return false;
-    if (analyticsFilters.triage && r.triage?.verdict !== analyticsFilters.triage) return false;
-    if (analyticsFilters.status && r.status !== analyticsFilters.status) return false;
-    if (analyticsFilters.useCase) {
-      if (!(r.useCases || []).some(uc => uc.title === analyticsFilters.useCase)) return false;
+    if (analyticsFilters.dealType.length && !analyticsFilters.dealType.includes(r.dealType)) return false;
+    if (analyticsFilters.industry.length && !analyticsFilters.industry.includes(r.industry || 'Unknown')) return false;
+    if (analyticsFilters.timeEstimate.length && !analyticsFilters.timeEstimate.includes(r.triage?.timeEstimate)) return false;
+    if (analyticsFilters.triage.length && !analyticsFilters.triage.includes(r.triage?.verdict)) return false;
+    if (analyticsFilters.status.length && !analyticsFilters.status.includes(r.status)) return false;
+    if (analyticsFilters.useCase.length) {
+      if (!(r.useCases || []).some(uc => analyticsFilters.useCase.includes(uc.title))) return false;
     }
     return true;
   });
@@ -2689,7 +2716,7 @@ function filterIcon(key) {
 }
 
 function isFilterActive(key, value) {
-  return analyticsFilters[key] === value;
+  return analyticsFilters[key].includes(value);
 }
 
 // ============================================================
@@ -2712,11 +2739,13 @@ function renderAnalytics() {
       filterBar.innerHTML = `
         <div class="filter-bar-inner">
           <span class="filter-bar-label">Filtered by:</span>
-          ${Object.entries(analyticsFilters).filter(([, v]) => v !== null).map(([key, value]) => `
-            <button class="filter-chip" onclick="toggleAnalyticsFilter('${key}', '${value.replace(/'/g, "\\'")}')">
-              ${filterIcon(key)} ${filterLabel(key, value)} <span class="chip-x">&times;</span>
-            </button>
-          `).join('')}
+          ${Object.entries(analyticsFilters).filter(([, arr]) => arr.length > 0).flatMap(([key, arr]) =>
+            arr.map(value => `
+              <button class="filter-chip" onclick="toggleAnalyticsFilter('${key}', '${value.replace(/'/g, "\\'")}')">
+                ${filterIcon(key)} ${filterLabel(key, value)} <span class="chip-x">&times;</span>
+              </button>
+            `)
+          ).join('')}
           <button class="filter-chip filter-chip-clear" onclick="clearAllAnalyticsFilters()">Clear all</button>
           <span class="filter-bar-count">${all.length} of ${requests.length} request(s)</span>
         </div>
@@ -2739,30 +2768,66 @@ function renderAnalytics() {
     ? won.filter(r => r.closedArr && r.projectedArr).reduce((sum, r) => sum + (r.closedArr - r.projectedArr), 0) / won.filter(r => r.closedArr && r.projectedArr).length
     : 0;
 
+  const wonArr = won.reduce((sum, r) => sum + (r.closedArr || r.arr || 0), 0);
+  const wonArrRate = totalArr > 0 ? ((wonArr / totalArr) * 100).toFixed(0) : '—';
+
   document.getElementById('analytics-summary').innerHTML = `
-    <div class="summary-card">
-      <div class="summary-value">${all.length}</div>
-      <div class="summary-label">Total Requests</div>
+    <!-- Group 1: Activity -->
+    <div class="summary-group">
+      <div class="summary-group-label">Activity</div>
+      <div class="summary-group-cards">
+        <div class="summary-card">
+          <div class="summary-value">${all.length}</div>
+          <div class="summary-label">Total Requests</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-value">${completed.length}</div>
+          <div class="summary-label">Completed</div>
+        </div>
+      </div>
     </div>
-    <div class="summary-card">
-      <div class="summary-value">$${totalArr.toLocaleString()}</div>
-      <div class="summary-label">Total Pipeline ARR</div>
+    <!-- Group 2: Pipeline to Wins -->
+    <div class="summary-group summary-group-wide">
+      <div class="summary-group-label">Pipeline → Wins</div>
+      <div class="summary-group-cards">
+        <div class="summary-card">
+          <div class="summary-value">$${totalArr.toLocaleString()}</div>
+          <div class="summary-label">Pipeline ARR</div>
+        </div>
+        <div class="summary-card-arrow">→</div>
+        <div class="summary-card">
+          <div class="summary-value">$${wonArr.toLocaleString()}</div>
+          <div class="summary-label">Won ARR</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-value">${wonArrRate}${wonArrRate !== '—' ? '%' : ''}</div>
+          <div class="summary-label">Won ARR Rate</div>
+        </div>
+      </div>
     </div>
-    <div class="summary-card summary-highlight">
-      <div class="summary-value">${winRate}${winRate !== '—' ? '%' : ''}</div>
-      <div class="summary-label">Win Rate</div>
+    <!-- Group 3: Win Performance -->
+    <div class="summary-group">
+      <div class="summary-group-label">Performance</div>
+      <div class="summary-group-cards">
+        <div class="summary-card">
+          <div class="summary-value">${winRate}${winRate !== '—' ? '%' : ''}</div>
+          <div class="summary-label">Win Rate (Deals)</div>
+        </div>
+        <div class="summary-card ${avgDealDelta >= 0 ? 'summary-green' : 'summary-red'}">
+          <div class="summary-value">${avgDealDelta >= 0 ? '+' : '-'}$${Math.abs(Math.round(avgDealDelta)).toLocaleString()}</div>
+          <div class="summary-label">Avg Deal Delta</div>
+        </div>
+      </div>
     </div>
-    <div class="summary-card summary-green">
-      <div class="summary-value">$${influencedArr.toLocaleString()}</div>
-      <div class="summary-label">VC-Influenced ARR</div>
-    </div>
-    <div class="summary-card ${avgDealDelta >= 0 ? 'summary-green' : 'summary-red'}">
-      <div class="summary-value">${avgDealDelta >= 0 ? '+' : '-'}$${Math.abs(Math.round(avgDealDelta)).toLocaleString()}</div>
-      <div class="summary-label">Avg Deal Delta</div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-value">${completed.length}</div>
-      <div class="summary-label">Completed</div>
+    <!-- Group 4: VC Impact -->
+    <div class="summary-group">
+      <div class="summary-group-label">VC Impact</div>
+      <div class="summary-group-cards">
+        <div class="summary-card">
+          <div class="summary-value">$${influencedArr.toLocaleString()}</div>
+          <div class="summary-label">Influenced ARR</div>
+        </div>
+      </div>
     </div>
   `;
 
@@ -2793,7 +2858,13 @@ function renderAnalytics() {
 
   // --- Deal Delta ---
   const deltaDeals = withOutcome.filter(r => r.closedArr != null && r.projectedArr);
+  const totalDelta = deltaDeals.reduce((s, r) => s + (r.closedArr - r.projectedArr), 0);
+  const totalDeltaFormatted = (totalDelta >= 0 ? '+' : '-') + '$' + Math.abs(totalDelta).toLocaleString();
   document.querySelector('#analytics-deal-delta .analytics-card-body').innerHTML = deltaDeals.length > 0 ? `
+    <div class="delta-total-callout ${totalDelta >= 0 ? 'delta-positive' : 'delta-negative'}">
+      <div class="delta-total-value">${totalDeltaFormatted}</div>
+      <div class="delta-total-label">Total VC-Influenced Deal Delta across ${deltaDeals.length} deal${deltaDeals.length !== 1 ? 's' : ''}</div>
+    </div>
     <div class="delta-chart">
       ${deltaDeals.map(r => {
         const delta = r.closedArr - r.projectedArr;
@@ -2807,9 +2878,6 @@ function renderAnalytics() {
             </span>
           </div>`;
       }).join('')}
-    </div>
-    <div class="delta-summary">
-      <span>Total: <strong>${(() => { const t = deltaDeals.reduce((s, r) => s + (r.closedArr - r.projectedArr), 0); return (t >= 0 ? '+' : '-') + '$' + Math.abs(t).toLocaleString(); })()}</strong> across ${deltaDeals.length} deal(s)</span>
     </div>
   ` : '<p class="analytics-empty">No closed deals with delta data yet.</p>';
 

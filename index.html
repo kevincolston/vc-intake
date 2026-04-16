@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Value Consulting Intake | Amplitude</title>
-  <link rel="stylesheet" href="styles.css?v=15">
+  <link rel="stylesheet" href="styles.css?v=16">
 </head>
 <body>
   <nav class="top-nav">
@@ -107,7 +107,7 @@
               <textarea id="help-other-text" rows="2" placeholder="Tell us what you're looking for..."></textarea>
             </div>
           </div>
-          <div class="field">
+          <div class="field field-inline">
             <label for="needed-by">When do you need it by? <span class="required">*</span></label>
             <input type="date" id="needed-by" required>
           </div>
@@ -273,7 +273,12 @@
           <div class="analytics-card-body"></div>
         </div>
         <div class="analytics-card" id="analytics-deal-delta">
-          <h3 class="analytics-card-title">Deal Delta</h3>
+          <h3 class="analytics-card-title">Deal Delta
+            <span class="info-tooltip" tabindex="0">
+              <span class="info-icon">i</span>
+              <span class="info-tooltip-text">Deal Delta measures the difference between the final closed ARR and the original projected ARR for each deal. A positive delta means the VC helped increase deal size beyond initial expectations. This is a key metric showing the direct revenue impact of Value Consulting engagement.</span>
+            </span>
+          </h3>
           <div class="analytics-card-body"></div>
         </div>
       </div>
@@ -353,8 +358,8 @@
     </div>
   </div>
 
-  <script src="mock-data.js?v=15"></script>
-  <script src="mock-dossiers.js?v=15"></script>
-  <script src="app.js?v=15"></script>
+  <script src="mock-data.js?v=16"></script>
+  <script src="mock-dossiers.js?v=16"></script>
+  <script src="app.js?v=16"></script>
 </body>
 </html>
