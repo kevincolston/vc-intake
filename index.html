@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Value Consulting Intake | Amplitude</title>
-  <link rel="stylesheet" href="styles.css?v=10">
+  <link rel="stylesheet" href="styles.css?v=15">
 </head>
 <body>
   <nav class="top-nav">
@@ -42,8 +42,70 @@
         <section class="form-section">
           <h2>2. What Do You Need?</h2>
           <div class="field">
-            <label for="help-needed">I need help with... <span class="required">*</span></label>
-            <textarea id="help-needed" rows="4" required placeholder="Be specific about the deliverable or support you need. Examples:&#10;- Outside-in financial model to support internal business case&#10;- Collaborative BVA ahead of exec meeting&#10;- Value realization deck to support renewal&#10;- ROI analysis for expansion business case"></textarea>
+            <label>I need help with... <span class="required">*</span></label>
+            <small class="field-hint">Select all that apply.</small>
+            <div class="checkbox-grid help-type-grid" id="help-type-grid">
+              <label class="checkbox-card">
+                <input type="checkbox" name="help-type" value="Outside-in financial model to support internal business case">
+                <div class="card-content">
+                  <strong>Financial Model</strong>
+                  <span>Outside-in business case for internal champion</span>
+                </div>
+              </label>
+              <label class="checkbox-card">
+                <input type="checkbox" name="help-type" value="Collaborative BVA ahead of executive meeting">
+                <div class="card-content">
+                  <strong>BVA / Value Assessment</strong>
+                  <span>Collaborative business value assessment</span>
+                </div>
+              </label>
+              <label class="checkbox-card">
+                <input type="checkbox" name="help-type" value="Value realization deck to support renewal or EBR">
+                <div class="card-content">
+                  <strong>Value Realization</strong>
+                  <span>ROI recap for renewal, EBR, or QBR</span>
+                </div>
+              </label>
+              <label class="checkbox-card">
+                <input type="checkbox" name="help-type" value="ROI analysis for expansion business case">
+                <div class="card-content">
+                  <strong>Expansion ROI</strong>
+                  <span>Business case for upsell / cross-sell</span>
+                </div>
+              </label>
+              <label class="checkbox-card">
+                <input type="checkbox" name="help-type" value="Executive stakeholder interview or discovery support">
+                <div class="card-content">
+                  <strong>Executive Discovery</strong>
+                  <span>Stakeholder interview or exec alignment</span>
+                </div>
+              </label>
+              <label class="checkbox-card">
+                <input type="checkbox" name="help-type" value="EBC or executive briefing center value narrative">
+                <div class="card-content">
+                  <strong>EBC Prep</strong>
+                  <span>Executive briefing value narrative</span>
+                </div>
+              </label>
+              <label class="checkbox-card">
+                <input type="checkbox" name="help-type" value="Competitive value differentiation and positioning">
+                <div class="card-content">
+                  <strong>Competitive Positioning</strong>
+                  <span>Value-based differentiation vs. competitor</span>
+                </div>
+              </label>
+              <label class="checkbox-card checkbox-card-other">
+                <input type="checkbox" name="help-type" value="other" id="help-type-other">
+                <div class="card-content">
+                  <strong>Other</strong>
+                  <span>Something else not listed</span>
+                </div>
+              </label>
+            </div>
+            <div class="field help-other-field hidden" id="help-other-field">
+              <label for="help-other-text">Describe what you need:</label>
+              <textarea id="help-other-text" rows="2" placeholder="Tell us what you're looking for..."></textarea>
+            </div>
           </div>
           <div class="field">
             <label for="needed-by">When do you need it by? <span class="required">*</span></label>
@@ -252,6 +314,14 @@
         </div>
       </div>
 
+      <!-- Charts Row 5: Support Types -->
+      <div class="analytics-row">
+        <div class="analytics-card analytics-full-width" id="analytics-support-types">
+          <h3 class="analytics-card-title">Support Types Requested</h3>
+          <div class="analytics-card-body"></div>
+        </div>
+      </div>
+
       <!-- All Requests Table -->
       <div class="analytics-card analytics-full-width" id="analytics-table">
         <h3 class="analytics-card-title">All Requests</h3>
@@ -283,7 +353,8 @@
     </div>
   </div>
 
-  <script src="mock-data.js?v=10"></script>
-  <script src="app.js?v=10"></script>
+  <script src="mock-data.js?v=15"></script>
+  <script src="mock-dossiers.js?v=15"></script>
+  <script src="app.js?v=15"></script>
 </body>
 </html>
