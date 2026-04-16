@@ -1765,3 +1765,312 @@ const SEED_REQUESTS = [
     notifications: []
   }
 ];
+
+// ============================================================
+// Mock Competitive Landscape Data (keyed by account name)
+// ============================================================
+const MOCK_COMPETITIVE = {
+  "Bank of America": {
+    deployed: [
+      { name: "Adobe Analytics", product: "Adobe Experience Platform", maturity: "deeply-embedded", since: "2018", notes: "Enterprise-wide deployment across all digital properties. 200+ users." },
+      { name: "Google Analytics 360", product: "GA360", maturity: "established", since: "2020", notes: "Used by marketing org for campaign attribution." },
+      { name: "Quantum Metric", product: "Digital Analytics", maturity: "pilot", since: "2025", notes: "AI COE team running a proof-of-concept for AI feature analytics." }
+    ],
+    rfpCompetitors: [
+      { name: "Pendo", threat: "medium", notes: "Pitched product analytics for AI features. Strong in-app guidance story." },
+      { name: "Heap", threat: "low", notes: "Mentioned in early conversations but not actively evaluated." }
+    ],
+    summary: "Adobe is deeply embedded enterprise-wide. We're competing for net-new AI analytics use case where Adobe has gaps. Pendo is in the mix for product analytics."
+  },
+  "Spotify": {
+    deployed: [
+      { name: "Mixpanel", product: "Product Analytics", maturity: "established", since: "2021", notes: "Primary product analytics tool for music experience. ~150 users." },
+      { name: "Snowplow", product: "Event Collection", maturity: "deeply-embedded", since: "2019", notes: "Custom event pipeline feeding their data warehouse." }
+    ],
+    rfpCompetitors: null,
+    summary: "Mixpanel is established but struggling with scale. Expansion path is podcast analytics where Mixpanel isn't deployed. Snowplow is infrastructure-level and not a competitive threat."
+  },
+  "Peloton": {
+    deployed: [
+      { name: "Amplitude", product: "Analytics", maturity: "established", since: "2023", notes: "Current customer. Used by product team for connected fitness analytics." },
+      { name: "Braze", product: "Customer Engagement", maturity: "established", since: "2022", notes: "Marketing automation and push notifications. Integrated with current analytics." }
+    ],
+    rfpCompetitors: [
+      { name: "Mixpanel", threat: "high", notes: "Actively being evaluated as a potential replacement. Cost concerns driving evaluation." }
+    ],
+    summary: "We're the incumbent but at risk. Mixpanel is being evaluated as a lower-cost alternative. Renewal defense is critical."
+  },
+  "Stripe": {
+    deployed: [
+      { name: "Heap", product: "Digital Insights", maturity: "established", since: "2021", notes: "Used by developer experience team. 80+ users across product org." },
+      { name: "Datadog", product: "RUM / APM", maturity: "deeply-embedded", since: "2019", notes: "Infrastructure monitoring. Some overlap with product analytics use cases." }
+    ],
+    rfpCompetitors: [
+      { name: "Heap", threat: "high", notes: "Incumbent with strong user base. We're trying to displace." },
+      { name: "PostHog", threat: "medium", notes: "Developer-friendly positioning resonates with Stripe's eng culture." }
+    ],
+    summary: "Heap is the incumbent and primary competitor. PostHog is a dark horse with developer appeal. We need to differentiate on enterprise scale and financial modeling capabilities."
+  },
+  "DoorDash": {
+    deployed: [
+      { name: "Amplitude", product: "Analytics", maturity: "established", since: "2021", notes: "Current customer. Consumer-side analytics for delivery experience." },
+      { name: "Segment", product: "CDP", maturity: "deeply-embedded", since: "2020", notes: "Central data collection layer feeding multiple tools." }
+    ],
+    rfpCompetitors: null,
+    summary: "We're the incumbent on consumer side. Expansion into merchant analytics is greenfield — no competing product analytics tool on merchant side."
+  },
+  "Rivian": {
+    deployed: [
+      { name: "Google Analytics 4", product: "GA4", maturity: "emerging", since: "2024", notes: "Basic web analytics only. No product analytics for connected vehicle." },
+      { name: "Palantir Foundry", product: "Data Platform", maturity: "established", since: "2022", notes: "Heavy data platform for manufacturing and supply chain. Not product analytics." }
+    ],
+    rfpCompetitors: [
+      { name: "Mixpanel", threat: "high", notes: "Strong pitch around mobile app analytics for EV owners." },
+      { name: "Pendo", threat: "medium", notes: "In-app engagement story for vehicle companion app." },
+      { name: "Amplitude", threat: "n/a", notes: "We are a contender in this evaluation." }
+    ],
+    summary: "Greenfield opportunity — no product analytics deployed. Formal RFP with Mixpanel as primary competitor. Pendo also evaluating. GA4 is minimal and not competitive."
+  },
+  "Instacart": {
+    deployed: [
+      { name: "Amplitude", product: "Analytics", maturity: "deeply-embedded", since: "2022", notes: "Current customer. 300+ users across consumer and shopper teams." },
+      { name: "Looker", product: "BI / Dashboards", maturity: "deeply-embedded", since: "2020", notes: "Primary BI tool for business stakeholders. Complementary to Amplitude." }
+    ],
+    rfpCompetitors: null,
+    summary: "We're deeply embedded. Renewal is about proving continued value and expanding into new use cases. No competitive threat identified."
+  },
+  "Figma": {
+    deployed: [
+      { name: "PostHog", product: "Product Analytics", maturity: "established", since: "2023", notes: "Engineering team deployed PostHog for product-led growth tracking. ~60 users." },
+      { name: "LaunchDarkly", product: "Feature Flags", maturity: "established", since: "2022", notes: "Feature management. Potential integration point." }
+    ],
+    rfpCompetitors: [
+      { name: "PostHog", threat: "high", notes: "Incumbent with engineering loyalty. Open-source DNA appeals to Figma's culture." },
+      { name: "Statsig", threat: "medium", notes: "Experimentation platform being considered for A/B testing needs." }
+    ],
+    summary: "PostHog is the incumbent with strong engineering support. Our differentiation is enterprise-grade analytics, advanced cohorts, and superior collaboration features for non-technical users."
+  },
+  "Airbnb": {
+    deployed: [
+      { name: "In-house (Minerva)", product: "Custom Analytics", maturity: "deeply-embedded", since: "2016", notes: "Proprietary metrics layer built on top of Spark/Hive. 500+ users." },
+      { name: "Tableau", product: "BI / Visualization", maturity: "deeply-embedded", since: "2017", notes: "Primary dashboarding tool for business teams." }
+    ],
+    rfpCompetitors: [
+      { name: "Mixpanel", threat: "low", notes: "Explored for specific team use cases but not a serious contender." }
+    ],
+    summary: "Airbnb has a strong in-house analytics platform (Minerva) but it's expensive to maintain. Our opportunity is augmenting or partially replacing custom tooling with faster time-to-insight."
+  },
+  "Shopify": {
+    deployed: [
+      { name: "Google Analytics 4", product: "GA4", maturity: "established", since: "2023", notes: "Used across merchant-facing properties." },
+      { name: "Heap", product: "Product Analytics", maturity: "pilot", since: "2025", notes: "Pilot in the merchant admin experience team. 20 users." }
+    ],
+    rfpCompetitors: [
+      { name: "Heap", threat: "high", notes: "Already in pilot. Strong autocapture story resonates with Shopify's speed-of-deployment values." },
+      { name: "Amplitude", threat: "n/a", notes: "We are a contender in this evaluation." }
+    ],
+    summary: "Heap has a head start with an active pilot. We need to demonstrate superior analytics depth and scalability beyond autocapture. GA4 is not a competitive threat for product analytics."
+  },
+  "BMW": {
+    deployed: [
+      { name: "Adobe Analytics", product: "Adobe Experience Cloud", maturity: "deeply-embedded", since: "2017", notes: "Enterprise standard across all digital touchpoints. 400+ users globally." },
+      { name: "Medallia", product: "Experience Management", maturity: "established", since: "2019", notes: "Customer feedback and NPS tracking across dealership and digital experiences." },
+      { name: "SAP Analytics Cloud", product: "Enterprise BI", maturity: "established", since: "2020", notes: "Corporate BI standard. Manufacturing and sales analytics." }
+    ],
+    rfpCompetitors: [
+      { name: "Pendo", threat: "medium", notes: "Pitched for connected car companion app analytics." },
+      { name: "Contentsquare", threat: "medium", notes: "Strong digital experience analytics pitch for configurator and e-commerce." }
+    ],
+    summary: "Adobe is deeply embedded enterprise-wide (EMEA HQ mandate). Our opportunity is the connected vehicle digital experience where Adobe has gaps. Contentsquare and Pendo also competing for this space."
+  },
+  "Notion": {
+    deployed: [
+      { name: "Amplitude", product: "Analytics", maturity: "established", since: "2022", notes: "Current customer. Primary product analytics for collaboration features." },
+      { name: "Statsig", product: "Experimentation", maturity: "emerging", since: "2024", notes: "Recently adopted for A/B testing. Growing footprint in product org." }
+    ],
+    rfpCompetitors: null,
+    summary: "We're the incumbent. Expansion opportunity into AI features analytics. Statsig is complementary, not competitive. No displacement risk identified."
+  },
+  "Coinbase": {
+    deployed: [
+      { name: "Amplitude", product: "Analytics", maturity: "established", since: "2022", notes: "Current customer. Trading experience and onboarding analytics." },
+      { name: "Chainalysis", product: "Blockchain Analytics", maturity: "deeply-embedded", since: "2019", notes: "Compliance and transaction monitoring. Not a product analytics competitor." },
+      { name: "Looker", product: "BI / Dashboards", maturity: "established", since: "2021", notes: "Business intelligence for finance and operations teams." }
+    ],
+    rfpCompetitors: [
+      { name: "Mixpanel", threat: "medium", notes: "Some teams exploring Mixpanel for specific use cases. Cost-driven evaluation." }
+    ],
+    summary: "We're the incumbent but Mixpanel is circling on cost. Renewal defense should emphasize compliance-grade data governance and the breadth of our deployment."
+  }
+};
+
+// ============================================================
+// Mock Amplitude Customer Success Stories
+// ============================================================
+const MOCK_SUCCESS_STORIES = [
+  {
+    id: "ss-nbcuniversal",
+    customer: "NBCUniversal",
+    industry: "Media",
+    useCaseThemes: ["Streaming Engagement Optimization", "Podcast Engagement & Monetization Analytics", "Cross-Platform Listening Experience", "AI Product Performance & Feature Measurement"],
+    title: "NBCUniversal Drives Streaming Engagement with Amplitude",
+    summary: "NBCUniversal used Amplitude to measure content engagement across Peacock, reducing churn by identifying drop-off points in the streaming experience and personalizing content recommendations at scale.",
+    url: "https://amplitude.com/customers/nbcuniversal",
+    isPublic: true,
+    metrics: ["22% reduction in early churn", "35% increase in content discovery engagement", "3x faster experiment velocity"]
+  },
+  {
+    id: "ss-burger-king",
+    customer: "Burger King",
+    industry: "QSR / Retail",
+    useCaseThemes: ["Mobile App Conversion Optimization", "Checkout Conversion Optimization", "Merchant Analytics & Storefront Optimization"],
+    title: "Burger King Increases Mobile Order Conversion with Amplitude",
+    summary: "Burger King leveraged Amplitude's funnel analysis and experimentation to optimize their mobile ordering flow, identifying friction points that were suppressing conversion from menu browse to completed purchase.",
+    url: "https://amplitude.com/customers/burger-king",
+    isPublic: true,
+    metrics: ["18% lift in mobile order conversion", "40% faster A/B test cycle time", "2.1x ROI on mobile app investment"]
+  },
+  {
+    id: "ss-jumbo-interactive",
+    customer: "Jumbo Interactive",
+    industry: "Gaming / Lottery",
+    useCaseThemes: ["User Retention Analytics", "Product-Led Growth Funnel Optimization", "Onboarding & KYC Funnel Optimization"],
+    title: "Jumbo Interactive Boosts Lottery Player Retention with Amplitude",
+    summary: "Jumbo Interactive used Amplitude cohort analysis and behavioral segmentation to identify at-risk lottery players and deploy targeted re-engagement campaigns, significantly improving 30-day retention rates.",
+    url: "https://amplitude.com/customers/jumbo-interactive",
+    isPublic: true,
+    metrics: ["27% improvement in 30-day player retention", "15% increase in repeat purchase rate", "50% reduction in time to retention insight"]
+  },
+  {
+    id: "ss-under-armour",
+    customer: "Under Armour",
+    industry: "Fitness / Consumer",
+    useCaseThemes: ["Connected Fitness Engagement", "Shopper Efficiency & Fulfillment Optimization", "Cross-Platform Listening Experience", "Experience Quality Measurement"],
+    title: "Under Armour Measures Connected Fitness Engagement Across Platforms",
+    summary: "Under Armour used Amplitude to unify behavioral data from the MapMyRun and MyFitnessPal apps, enabling product teams to understand cross-platform engagement and optimize the connected fitness experience.",
+    url: "https://amplitude.com/customers/under-armour",
+    isPublic: true,
+    metrics: ["45% increase in cross-app engagement", "30% improvement in workout completion rates", "2x faster feature adoption measurement"]
+  },
+  {
+    id: "ss-top3-us-bank",
+    customer: "Top 3 US Bank",
+    industry: "Financial Services",
+    useCaseThemes: ["Digital Banking Customer Journey Optimization", "AI Product Performance & Feature Measurement", "Onboarding & KYC Funnel Optimization", "Cross-Channel Customer Journey"],
+    title: "Top 3 US Bank Optimizes Digital Banking Journeys with Amplitude",
+    summary: "A top-three US bank deployed Amplitude to map the end-to-end digital account opening and onboarding journey, uncovering drop-off points that reduced completed applications and identifying AI-powered nudge opportunities to improve conversion.",
+    url: null,
+    isPublic: false,
+    metrics: ["31% improvement in digital account opening completion", "24% reduction in KYC drop-off", "$4.2M in estimated annual recovered revenue"]
+  },
+  {
+    id: "ss-fortune100-fintech",
+    customer: "Fortune 100 Fintech",
+    industry: "Fintech",
+    useCaseThemes: ["Developer Experience Measurement", "Developer Platform Analytics", "Product-Led Growth Funnel Optimization", "Onboarding & KYC Funnel Optimization"],
+    title: "Fortune 100 Fintech Scales Developer Platform Analytics with Amplitude",
+    summary: "A Fortune 100 fintech used Amplitude to instrument their developer platform, measuring API adoption funnels and time-to-first-integration to reduce developer time-to-value and increase platform stickiness.",
+    url: null,
+    isPublic: false,
+    metrics: ["38% reduction in developer time-to-first-integration", "52% improvement in API activation rate", "3x increase in instrumented developer journeys"]
+  },
+  {
+    id: "ss-calm",
+    customer: "Calm",
+    industry: "Health & Wellness",
+    useCaseThemes: ["Subscription Conversion Optimization", "Product-Led Growth Funnel Optimization", "Experience Quality Measurement", "User Retention Analytics"],
+    title: "Calm Improves Subscription Conversion with Amplitude Experimentation",
+    summary: "Calm used Amplitude's experimentation platform to run structured A/B tests across their free-to-paid conversion funnel, identifying which meditation content and in-app prompts drove the highest subscription upgrade rates.",
+    url: "https://amplitude.com/customers/calm",
+    isPublic: true,
+    metrics: ["19% lift in free-to-paid conversion", "4x increase in experiment throughput", "28% improvement in 90-day subscriber retention"]
+  },
+  {
+    id: "ss-rappi",
+    customer: "Rappi",
+    industry: "Marketplace / Delivery",
+    useCaseThemes: ["Merchant Onboarding Conversion", "Dasher-Merchant Matching Optimization", "Merchant Analytics & Storefront Optimization", "Checkout Conversion Optimization"],
+    title: "Rappi Accelerates Merchant Onboarding Conversion Across Latin America",
+    summary: "Rappi used Amplitude to instrument and optimize the merchant onboarding flow across multiple markets, identifying localization gaps and UX friction that were slowing time-to-first-order for new restaurant partners.",
+    url: "https://amplitude.com/customers/rappi",
+    isPublic: true,
+    metrics: ["42% improvement in merchant onboarding completion rate", "60% reduction in time-to-first-order for new merchants", "25% increase in merchant GMV in first 30 days"]
+  },
+  {
+    id: "ss-atlassian",
+    customer: "Atlassian",
+    industry: "SaaS / Collaboration",
+    useCaseThemes: ["Product-Led Growth Funnel Optimization", "Collaboration Analytics", "Workspace Collaboration Analytics", "PLG Funnel Optimization", "AI Feature Adoption & Impact"],
+    title: "Atlassian Powers Product-Led Growth with Amplitude",
+    summary: "Atlassian used Amplitude to unify product usage signals across Jira, Confluence, and Trello, enabling their PLG team to identify expansion signals, measure feature adoption, and accelerate free-to-paid conversion at enterprise scale.",
+    url: "https://amplitude.com/customers/atlassian",
+    isPublic: true,
+    metrics: ["33% improvement in free-to-paid conversion", "2.4x increase in cross-product expansion rate", "50% faster feature adoption measurement"]
+  },
+  {
+    id: "ss-global-auto-oem",
+    customer: "Global Automotive OEM",
+    industry: "Automotive",
+    useCaseThemes: ["Connected Vehicle UX Analytics", "Digital Showroom & Configurator Analytics", "Connected Vehicle Digital Experience", "Cross-Channel Customer Journey"],
+    title: "Global Automotive OEM Measures Connected Vehicle Digital Experience with Amplitude",
+    summary: "A global automotive OEM used Amplitude to instrument the companion mobile app for their connected vehicle platform, measuring driver interaction patterns with in-vehicle software features and optimizing the digital ownership experience.",
+    url: null,
+    isPublic: false,
+    metrics: ["48% increase in connected feature engagement", "35% improvement in app session depth", "22% reduction in in-vehicle UX support tickets"]
+  },
+  {
+    id: "ss-instacart",
+    customer: "Instacart",
+    industry: "Marketplace / Grocery",
+    useCaseThemes: ["Shopper Efficiency & Fulfillment Optimization", "Merchant Analytics & Storefront Optimization", "Merchant Onboarding Conversion", "User Retention Analytics"],
+    title: "Instacart Optimizes Shopper Experience and Merchant Performance with Amplitude",
+    summary: "Instacart used Amplitude to measure shopper fulfillment efficiency and merchant storefront performance, enabling product and operations teams to identify bottlenecks in the pick-pack-deliver flow and optimize merchant catalog completeness.",
+    url: "https://amplitude.com/customers/instacart",
+    isPublic: true,
+    metrics: ["17% improvement in on-time delivery rate", "29% increase in merchant catalog completion", "3x faster insight delivery to operations teams"]
+  },
+  {
+    id: "ss-leading-crypto-exchange",
+    customer: "Leading Crypto Exchange",
+    industry: "Crypto / Fintech",
+    useCaseThemes: ["Trading Experience Analytics", "Regulatory Compliance Dashboards", "Onboarding & KYC Funnel Optimization", "Digital Banking Customer Journey Optimization"],
+    title: "Leading Crypto Exchange Improves Trading UX and Compliance Visibility with Amplitude",
+    summary: "A leading crypto exchange used Amplitude to instrument their trading interface and KYC onboarding funnel, surfacing compliance-grade audit trails and reducing drop-off during identity verification.",
+    url: null,
+    isPublic: false,
+    metrics: ["41% reduction in KYC verification drop-off", "26% improvement in first-trade completion rate", "100% audit trail coverage for compliance reporting"]
+  },
+  {
+    id: "ss-booking-com",
+    customer: "Booking.com",
+    industry: "Travel / Marketplace",
+    useCaseThemes: ["AI Product Performance & Feature Measurement", "AI Feature Adoption & Impact", "Guest Experience Analytics & Personalization", "Host Marketplace Optimization", "Cross-Channel Customer Journey"],
+    title: "Booking.com Measures AI Feature Adoption and Personalization Impact with Amplitude",
+    summary: "Booking.com used Amplitude to measure the adoption and downstream booking impact of their AI-powered search and recommendation features, enabling rapid iteration and confident rollout of machine learning models across markets.",
+    url: "https://amplitude.com/customers/booking-com",
+    isPublic: true,
+    metrics: ["23% lift in booking conversion attributed to AI recommendations", "4x faster AI feature experiment cycles", "38% increase in returning user engagement with personalized content"]
+  },
+  {
+    id: "ss-paypal",
+    customer: "PayPal",
+    industry: "Fintech",
+    useCaseThemes: ["Cross-Platform User Journey", "Developer Experience Measurement", "Checkout Conversion Optimization", "Onboarding & KYC Funnel Optimization", "Trading Experience Analytics"],
+    title: "PayPal Unifies Cross-Platform User Journey Analytics with Amplitude",
+    summary: "PayPal used Amplitude to stitch together behavioral data across their consumer app, merchant checkout SDK, and Venmo platform, giving product teams a unified view of the payment journey and enabling cross-surface experimentation.",
+    url: "https://amplitude.com/customers/paypal",
+    isPublic: true,
+    metrics: ["44% improvement in checkout completion rate", "3x reduction in cross-platform attribution time", "31% increase in PayPal-Venmo cross-product adoption"]
+  },
+  {
+    id: "ss-shopify",
+    customer: "Shopify",
+    industry: "E-commerce / SaaS",
+    useCaseThemes: ["Merchant Analytics & Storefront Optimization", "Merchant Onboarding Conversion", "Checkout Conversion Optimization", "Product-Led Growth Funnel Optimization"],
+    title: "Shopify Deepens Merchant Experience Analytics with Amplitude",
+    summary: "Shopify used Amplitude to instrument the merchant admin experience, enabling product teams to measure how merchants discover and adopt new features, optimize onboarding flows for new store owners, and identify expansion signals for Shopify Plus upsell.",
+    url: "https://amplitude.com/customers/shopify",
+    isPublic: true,
+    metrics: ["36% improvement in merchant feature adoption within 30 days", "28% reduction in merchant onboarding time-to-first-sale", "2.7x increase in Shopify Plus expansion signal accuracy"]
+  }
+];

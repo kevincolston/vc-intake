@@ -7,6 +7,25 @@ function saveRequests() {
   localStorage.setItem('vc-requests-v2', JSON.stringify(requests));
 }
 
+// Backfill competitive landscape & success stories on existing requests (called after all functions are defined)
+function migrateRequests() {
+  let changed = false;
+  requests.forEach(r => {
+    if (!r.competitiveLandscape && typeof MOCK_COMPETITIVE !== 'undefined') {
+      const cl = MOCK_COMPETITIVE[r.customerName];
+      if (cl) {
+        r.competitiveLandscape = { deployed: cl.deployed || [], rfpCompetitors: cl.rfpCompetitors || [], summary: cl.summary || '' };
+        changed = true;
+      }
+    }
+    if (r.useCases && r.useCases.length > 0 && !r.useCases[0].successStories && typeof MOCK_SUCCESS_STORIES !== 'undefined') {
+      r.useCases = matchSuccessStories(r.useCases, r.industry || '');
+      changed = true;
+    }
+  });
+  if (changed) saveRequests();
+}
+
 // ============================================================
 // VC Team
 // ============================================================
@@ -127,6 +146,22 @@ document.querySelectorAll('.collapsible-header').forEach(header => {
     icon.textContent = body.classList.contains('hidden') ? '+' : '−';
   });
 });
+
+// ============================================================
+// "Other" help-type toggle
+// ============================================================
+const helpOtherCheckbox = document.getElementById('help-type-other');
+if (helpOtherCheckbox) {
+  helpOtherCheckbox.addEventListener('change', () => {
+    const otherField = document.getElementById('help-other-field');
+    if (otherField) {
+      otherField.classList.toggle('hidden', !helpOtherCheckbox.checked);
+      if (helpOtherCheckbox.checked) {
+        document.getElementById('help-other-text')?.focus();
+      }
+    }
+  });
+}
 
 // ============================================================
 // Default date
@@ -577,6 +612,83 @@ function buildEvidenceLog(sfResult, kaiaResult, slackResult, granolaResult, glea
 }
 
 // ============================================================
+// Competitive Landscape Lookup
+// ============================================================
+
+function lookupCompetitiveLandscape(accountName) {
+  const data = (typeof MOCK_COMPETITIVE !== 'undefined') ? MOCK_COMPETITIVE[accountName] : null;
+  if (!data) return null;
+  return {
+    deployed: data.deployed || [],
+    rfpCompetitors: data.rfpCompetitors || [],
+    summary: data.summary || ''
+  };
+}
+
+// ============================================================
+// Success Story Matching
+// ============================================================
+
+const MATURITY_LABELS = {
+  'deeply-embedded': { label: 'Deeply Embedded', color: '#dc2626', bg: '#fef2f2', icon: '🔴' },
+  'established': { label: 'Established', color: '#d97706', bg: '#fffbeb', icon: '🟡' },
+  'emerging': { label: 'Emerging', color: '#2563eb', bg: '#eff6ff', icon: '🔵' },
+  'pilot': { label: 'Pilot', color: '#7c3aed', bg: '#f5f3ff', icon: '🟣' },
+  'legacy': { label: 'Legacy', color: '#6b7280', bg: '#f9fafb', icon: '⚪' }
+};
+
+function matchSuccessStories(useCases, industry) {
+  if (typeof MOCK_SUCCESS_STORIES === 'undefined' || !MOCK_SUCCESS_STORIES) return useCases;
+
+  return useCases.map(uc => {
+    const stories = [];
+    const ucThemeLower = (uc.title || '').toLowerCase();
+
+    MOCK_SUCCESS_STORIES.forEach(story => {
+      let score = 0;
+
+      // Theme match: check if any story theme overlaps with use case title
+      const themeMatch = story.useCaseThemes?.some(t => {
+        const tLower = t.toLowerCase();
+        // Check for keyword overlap (at least 2 significant words in common)
+        const ucWords = ucThemeLower.split(/\s+/).filter(w => w.length > 3);
+        const storyWords = tLower.split(/\s+/).filter(w => w.length > 3);
+        const overlap = ucWords.filter(w => storyWords.some(sw => sw.includes(w) || w.includes(sw)));
+        if (overlap.length >= 2) return true;
+        // Direct substring match
+        if (tLower.includes(ucThemeLower) || ucThemeLower.includes(tLower)) return true;
+        return false;
+      });
+
+      if (themeMatch) score += 3;
+
+      // Industry match
+      if (industry && story.industry) {
+        const indLower = industry.toLowerCase();
+        const storyIndLower = story.industry.toLowerCase();
+        if (indLower.includes(storyIndLower) || storyIndLower.includes(indLower)) {
+          score += 2;
+        } else {
+          // Check for partial overlap (e.g., "Financial Services / Fintech" vs "Fintech")
+          const indParts = indLower.split(/[\/,&]+/).map(s => s.trim());
+          const storyParts = storyIndLower.split(/[\/,&]+/).map(s => s.trim());
+          const partOverlap = indParts.some(p => storyParts.some(sp => p.includes(sp) || sp.includes(p)));
+          if (partOverlap) score += 2;
+        }
+      }
+
+      if (score >= 2) {
+        stories.push({ ...story, relevanceScore: score });
+      }
+    });
+
+    // Sort by relevance (industry+theme first), then limit to top 3
+    stories.sort((a, b) => b.relevanceScore - a.relevanceScore);
+    return { ...uc, successStories: stories.slice(0, 3) };
+  });
+}
+
+// ============================================================
 // Processing Flow
 // ============================================================
 
@@ -587,7 +699,9 @@ const PROCESSING_STEPS = [
   { id: 'granola', label: 'Checking Granola meeting notes', source: 'Granola' },
   { id: 'glean', label: 'Searching Glean and Google Drive', source: 'Glean' },
   { id: 'triage', label: 'Running triage assessment', source: 'Engine' },
+  { id: 'competitive', label: 'Pulling competitive landscape intel', source: 'Salesforce' },
   { id: 'usecases', label: 'Drafting use cases from discovery signals', source: 'Engine' },
+  { id: 'stories', label: 'Matching relevant customer success stories', source: 'Engine' },
   { id: 'brief', label: 'Assembling intake brief', source: 'Engine' }
 ];
 
@@ -629,11 +743,26 @@ document.getElementById('intake-form').addEventListener('submit', async function
   e.preventDefault();
 
   const accountInput = document.getElementById('account-input').value.trim();
-  const helpNeeded = document.getElementById('help-needed').value.trim();
   const neededBy = document.getElementById('needed-by').value;
   const additionalContext = document.getElementById('additional-context')?.value.trim() || '';
 
-  if (!accountInput || !helpNeeded) return;
+  // Build helpNeeded from checkbox selections
+  const helpSelections = [];
+  document.querySelectorAll('input[name="help-type"]:checked').forEach(cb => {
+    if (cb.value === 'other') {
+      const otherText = document.getElementById('help-other-text')?.value.trim();
+      if (otherText) helpSelections.push(otherText);
+    } else {
+      helpSelections.push(cb.value);
+    }
+  });
+  const helpNeeded = helpSelections.join('; ');
+
+  if (!accountInput || !helpNeeded) {
+    if (!accountInput) document.getElementById('account-input').focus();
+    else if (helpSelections.length === 0) showToast('Please select at least one type of support needed.');
+    return;
+  }
 
   // Gather justifications
   const justifications = [];
@@ -678,18 +807,30 @@ document.getElementById('intake-form').addEventListener('submit', async function
     const triage = runTriage(sfResult, helpNeeded, slackResult, kaiaResult, granolaResult, gleanResult);
     updateProcessingStep('triage', 'done');
 
+    // Step 6b: Competitive landscape
+    updateProcessingStep('competitive', 'active');
+    await simulateDelay(350);
+    const competitiveLandscape = lookupCompetitiveLandscape(accountName);
+    updateProcessingStep('competitive', competitiveLandscape ? 'done' : 'error');
+
     // Step 7: Use cases
     updateProcessingStep('usecases', 'active');
     await simulateDelay(400);
-    const useCases = draftUseCases(sfResult, kaiaResult, slackResult, granolaResult, gleanResult);
+    let useCases = draftUseCases(sfResult, kaiaResult, slackResult, granolaResult, gleanResult);
     updateProcessingStep('usecases', 'done');
+
+    // Step 7b: Match success stories to use cases
+    updateProcessingStep('stories', 'active');
+    await simulateDelay(350);
+    const sf = sfResult.found ? sfResult.data : {};
+    useCases = matchSuccessStories(useCases, sf.industry || '');
+    updateProcessingStep('stories', 'done');
 
     // Step 8: Assemble brief
     updateProcessingStep('brief', 'active');
     await simulateDelay(300);
 
     const evidenceLog = buildEvidenceLog(sfResult, kaiaResult, slackResult, granolaResult, gleanResult);
-    const sf = sfResult.found ? sfResult.data : {};
 
     const newRequest = {
       id: 'VC-2026-' + String(requests.length + 1).padStart(3, '0'),
@@ -727,7 +868,10 @@ document.getElementById('intake-form').addEventListener('submit', async function
       // Triage
       triage,
 
-      // Use Cases
+      // Competitive Landscape
+      competitiveLandscape,
+
+      // Use Cases (with matched success stories)
       useCases,
 
       // Evidence
@@ -768,6 +912,7 @@ document.getElementById('intake-form').addEventListener('submit', async function
     // Reset form
     this.reset();
     document.getElementById('needed-by').valueAsDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+    document.getElementById('help-other-field')?.classList.add('hidden');
 
     // Navigate to tracker
     setTimeout(() => {
@@ -920,8 +1065,8 @@ function renderTracker() {
 
       ${r.triage && r.triage.flags && r.triage.flags.length > 0 ? `
         <div class="card-flags">
-          ${r.triage.flags.slice(0, 2).map(f => `<span class="flag flag-${f.type}">${truncate(f.text, 80)}</span>`).join('')}
-          ${r.triage.flags.length > 2 ? `<span class="flag-more">+${r.triage.flags.length - 2} more</span>` : ''}
+          ${r.triage.flags.slice(0, 3).map(f => `<span class="flag flag-${f.type}">${f.text}</span>`).join('')}
+          ${r.triage.flags.length > 3 ? `<span class="flag-more">+${r.triage.flags.length - 3} more</span>` : ''}
         </div>
       ` : ''}
 
@@ -941,7 +1086,20 @@ function renderTracker() {
             </select>
           ` : ''}
         </div>
-        <button class="btn-view" data-request-id="${r.id}">View Brief</button>
+        <div class="btn-with-info">
+          <button class="btn-view" data-request-id="${r.id}">Intake Brief</button>
+          <span class="info-tooltip" tabindex="0">
+            <span class="info-icon">i</span>
+            <span class="info-tooltip-text">The auto-generated intake summary created when the AE submitted their request — includes deal context, triage verdict, and recommended next steps.</span>
+          </span>
+        </div>
+        <div class="btn-with-info">
+          <button class="btn-dossier" data-account="${r.customerName}">Account Dossier</button>
+          <span class="info-tooltip" tabindex="0">
+            <span class="info-icon">i</span>
+            <span class="info-tooltip-text">Full account intelligence report — company research, stakeholder map, product usage, value story, competitive landscape, and strategic talk track. Pulled from Salesforce, Slack, Granola, and web sources.</span>
+          </span>
+        </div>
       </div>
     </div>
     `;
@@ -950,6 +1108,9 @@ function renderTracker() {
   // Event handlers
   container.querySelectorAll('.btn-view').forEach(btn => {
     btn.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); viewRequest(btn.dataset.requestId); });
+  });
+  container.querySelectorAll('.btn-dossier').forEach(btn => {
+    btn.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); viewDossier(btn.dataset.account); });
   });
   container.querySelectorAll('.vc-assign-select').forEach(sel => {
     sel.addEventListener('change', async function () {
@@ -1124,6 +1285,52 @@ function viewRequest(id) {
       </div>
     </div>
 
+    <!-- Competitive Landscape -->
+    ${r.competitiveLandscape ? `
+    <div class="brief-section">
+      <h3 class="brief-h3">Competitive Landscape</h3>
+      <p class="brief-body comp-summary">${r.competitiveLandscape.summary}</p>
+
+      ${r.competitiveLandscape.deployed && r.competitiveLandscape.deployed.length > 0 ? `
+        <h4 class="brief-h4">Currently Deployed</h4>
+        <div class="comp-deployed-grid">
+          ${r.competitiveLandscape.deployed.map(c => {
+            const m = MATURITY_LABELS[c.maturity] || MATURITY_LABELS['emerging'];
+            return `
+            <div class="comp-card">
+              <div class="comp-card-header">
+                <strong class="comp-name">${c.name}</strong>
+                <span class="comp-maturity-badge" style="background:${m.bg}; color:${m.color}">${m.icon} ${m.label}</span>
+              </div>
+              <div class="comp-product">${c.product}</div>
+              ${c.since ? `<div class="comp-since">Deployed since ${c.since}</div>` : ''}
+              ${c.notes ? `<div class="comp-notes">${c.notes}</div>` : ''}
+              ${c.maturity === 'deeply-embedded' ? '<div class="comp-warning">⚠️ High switching cost — deeply embedded in workflows</div>' : ''}
+            </div>`;
+          }).join('')}
+        </div>
+      ` : ''}
+
+      ${r.competitiveLandscape.rfpCompetitors && r.competitiveLandscape.rfpCompetitors.length > 0 ? `
+        <h4 class="brief-h4">Active RFP / Competitive Evaluation</h4>
+        <div class="comp-rfp-list">
+          ${r.competitiveLandscape.rfpCompetitors.map(c => {
+            const threatColors = { high: '#dc2626', medium: '#d97706', low: '#16a34a' };
+            const threatBg = { high: '#fef2f2', medium: '#fffbeb', low: '#f0fdf4' };
+            return `
+            <div class="comp-rfp-item">
+              <span class="comp-rfp-name">${c.name}</span>
+              <span class="comp-threat-badge" style="background:${threatBg[c.threat] || '#f8fafc'}; color:${threatColors[c.threat] || '#64748b'}">
+                ${c.threat?.toUpperCase()} THREAT
+              </span>
+              ${c.notes ? `<span class="comp-rfp-notes">${c.notes}</span>` : ''}
+            </div>`;
+          }).join('')}
+        </div>
+      ` : '<p class="brief-meta-text" style="margin-top:8px">No active RFP or competitive evaluation identified.</p>'}
+    </div>
+    ` : ''}
+
     <!-- AE's Ask -->
     <div class="brief-section">
       <h3 class="brief-h3">AE's Ask</h3>
@@ -1166,6 +1373,31 @@ function viewRequest(id) {
               : (uc.evidence || 'None')}
             <span class="ev-confidence">— Confidence: ${uc.confidence || 'Unverified'}</span>
           </div>
+          ${uc.successStories && uc.successStories.length > 0 ? `
+          <div class="uc-stories">
+            <strong>Related Success Stories:</strong>
+            <div class="stories-list">
+              ${uc.successStories.map(s => `
+                <div class="story-card">
+                  <div class="story-header">
+                    ${s.url ? `<a href="${s.url}" target="_blank" class="story-title">${s.title}</a>` : `<span class="story-title">${s.title}</span>`}
+                    <div class="story-tags">
+                      <span class="story-tag story-tag-industry">${s.industry}</span>
+                      ${s.isPublic ? '<span class="story-tag story-tag-public">Public</span>' : '<span class="story-tag story-tag-internal">Internal</span>'}
+                      ${s.relevanceScore >= 5 ? '<span class="story-tag story-tag-match">Industry + Use Case Match</span>' : ''}
+                    </div>
+                  </div>
+                  <div class="story-summary">${s.summary}</div>
+                  ${s.metrics && s.metrics.length > 0 ? `
+                    <div class="story-metrics">
+                      ${s.metrics.map(m => `<span class="story-metric">${m}</span>`).join('')}
+                    </div>
+                  ` : ''}
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          ` : ''}
           <div class="uc-feedback-row">
             <button class="btn-feedback" data-uc="${uc.num}" data-request="${r.id}" title="Flag inaccurate data">⚑ Flag data issue</button>
           </div>
@@ -1538,6 +1770,595 @@ function exportBriefToClipboard(r, btn) {
       showToast('Brief copied as text — paste into any document');
     });
   });
+}
+
+// ============================================================
+// Dossier View
+// ============================================================
+
+const CONFIDENCE_CONFIG = {
+  HIGH: { icon: '🟢', label: 'HIGH CONFIDENCE', color: '#16a34a', bg: '#f0fdf4' },
+  MEDIUM: { icon: '🟡', label: 'MEDIUM', color: '#d97706', bg: '#fffbeb' },
+  LOW: { icon: '🟠', label: 'LOW', color: '#ea580c', bg: '#fff7ed' },
+  UNCONFIRMED: { icon: '🔴', label: 'UNCONFIRMED', color: '#dc2626', bg: '#fef2f2' }
+};
+
+function confidenceTag(confidence, source, sourceUrl) {
+  const c = CONFIDENCE_CONFIG[confidence?.toUpperCase()] || CONFIDENCE_CONFIG[confidence] || CONFIDENCE_CONFIG.MEDIUM;
+  const sourceHtml = sourceUrl
+    ? `<a href="${sourceUrl}" target="_blank" class="conf-source-link">[${source}]</a>`
+    : `<span class="conf-source">[${source}]</span>`;
+  return `<span class="conf-tag" style="color:${c.color}; background:${c.bg}">${c.icon} ${c.label}</span>${source ? sourceHtml : ''}`;
+}
+
+function renderAdoptionChart(adoption) {
+  if (!adoption || !adoption.wauTrend || adoption.wauTrend.length === 0) return '';
+  const data = adoption.wauTrend;
+  const max = Math.max(...data.map(d => d.value));
+  const min = Math.min(...data.map(d => d.value));
+  const range = max - min || 1;
+  const trendColor = adoption.trendDirection === 'growing' ? '#16a34a' : adoption.trendDirection === 'declining' ? '#dc2626' : '#6b7280';
+
+  // Build SVG sparkline
+  const width = 600;
+  const height = 160;
+  const padding = 30;
+  const chartW = width - padding * 2;
+  const chartH = height - padding * 2;
+  const points = data.map((d, i) => {
+    const x = padding + (i / (data.length - 1)) * chartW;
+    const y = padding + chartH - ((d.value - min) / range) * chartH;
+    return `${x},${y}`;
+  });
+
+  // Annotation markers
+  const annotations = (adoption.annotations || []).map(a => {
+    const idx = data.findIndex(d => d.week === a.week);
+    if (idx < 0) return '';
+    const x = padding + (idx / (data.length - 1)) * chartW;
+    const y = padding + chartH - ((data[idx].value - min) / range) * chartH;
+    return `<circle cx="${x}" cy="${y}" r="4" fill="${trendColor}" stroke="#fff" stroke-width="2"/>
+            <text x="${x}" y="${y - 12}" text-anchor="middle" font-size="9" fill="${trendColor}" font-weight="600">${a.label}</text>`;
+  }).join('');
+
+  return `
+    <div class="dossier-chart">
+      <svg viewBox="0 0 ${width} ${height}" class="adoption-svg">
+        <polyline points="${points.join(' ')}" fill="none" stroke="${trendColor}" stroke-width="2.5" stroke-linejoin="round"/>
+        ${annotations}
+        <text x="${padding}" y="${height - 4}" font-size="10" fill="#94a3b8">${data[0].week}</text>
+        <text x="${width - padding}" y="${height - 4}" font-size="10" fill="#94a3b8" text-anchor="end">${data[data.length - 1].week}</text>
+        <text x="${padding - 4}" y="${padding + 4}" font-size="10" fill="#94a3b8" text-anchor="end">${max}</text>
+        <text x="${padding - 4}" y="${padding + chartH + 4}" font-size="10" fill="#94a3b8" text-anchor="end">${min}</text>
+      </svg>
+      <div class="adoption-trend-summary" style="border-left: 3px solid ${trendColor}">
+        <p>${adoption.trendSummary}</p>
+        <span class="conf-source">${adoption.trendSource}</span>
+      </div>
+    </div>`;
+}
+
+function renderFeatureHeatmap(productHealth) {
+  if (!productHealth || !productHealth.featureUsage) return '';
+  const usageColors = { heavy: '#16a34a', moderate: '#d97706', light: '#ea580c', never: '#dc2626' };
+  const usageLabels = { heavy: 'Heavy', moderate: 'Moderate', light: 'Light', never: 'Never Used' };
+  return `
+    <div class="feature-heatmap">
+      ${productHealth.featureUsage.map(f => `
+        <div class="heatmap-row">
+          <span class="heatmap-feature">${f.feature}</span>
+          <div class="heatmap-bar-track">
+            <div class="heatmap-bar" style="width:${Math.min(100, (f.sessions / Math.max(...productHealth.featureUsage.map(x => x.sessions || 1))) * 100)}%; background:${usageColors[f.usage]}"></div>
+          </div>
+          <span class="heatmap-label" style="color:${usageColors[f.usage]}">${usageLabels[f.usage]}</span>
+          <span class="heatmap-sessions">${f.sessions.toLocaleString()} sessions</span>
+        </div>
+      `).join('')}
+    </div>`;
+}
+
+function viewDossier(accountName) {
+  if (typeof MOCK_DOSSIERS === 'undefined' || !MOCK_DOSSIERS) {
+    showToast('Dossier data not available.');
+    return;
+  }
+  const d = MOCK_DOSSIERS[accountName];
+  if (!d) {
+    showToast(`No dossier found for ${accountName}. Generate one with: "dossier for ${accountName}"`);
+    return;
+  }
+
+  const modal = document.getElementById('detail-modal');
+  const body = document.getElementById('modal-body');
+  const isCustomer = d.type === 'customer';
+  const s = d.snapshot;
+
+  // Health score badge
+  const hs = d.healthScore;
+  let healthBadgeHtml = '';
+  if (hs && (hs.score !== undefined || hs.overall !== undefined)) {
+    const score = hs.score ?? hs.overall;
+    const scoreClass = score >= 70 ? 'score-good' : score >= 40 ? 'score-warning' : 'score-critical';
+    const componentLabels = hs.components
+      ? Object.entries(hs.components).map(([k, v]) => `<span class="hs-component">${k}: ${v}</span>`).join('')
+      : '';
+    healthBadgeHtml = `
+      <div class="health-score-badge ${scoreClass}">
+        <span class="score-number">${score}</span>
+        <span class="score-label">Health</span>
+      </div>
+      ${componentLabels ? `<div class="hs-components">${componentLabels}</div>` : ''}`;
+  }
+
+  // Data confidence summary bar
+  const confBar = d.dataConfidence ? `
+    <div class="conf-summary-bar">
+      <span class="conf-bar-segment" style="width:${d.dataConfidence.high}%; background:#16a34a" title="High: ${d.dataConfidence.high}%"></span>
+      <span class="conf-bar-segment" style="width:${d.dataConfidence.medium}%; background:#d97706" title="Medium: ${d.dataConfidence.medium}%"></span>
+      <span class="conf-bar-segment" style="width:${d.dataConfidence.low}%; background:#ea580c" title="Low: ${d.dataConfidence.low}%"></span>
+      <span class="conf-bar-segment" style="width:${d.dataConfidence.unconfirmed}%; background:#dc2626" title="Unconfirmed: ${d.dataConfidence.unconfirmed}%"></span>
+    </div>
+    <div class="conf-summary-labels">
+      <span>🟢 ${d.dataConfidence.high}% High</span>
+      <span>🟡 ${d.dataConfidence.medium}% Med</span>
+      <span>🟠 ${d.dataConfidence.low}% Low</span>
+      <span>🔴 ${d.dataConfidence.unconfirmed}% Unconf</span>
+      <span class="conf-total">${d.dataConfidence.totalDataPoints} data points</span>
+    </div>
+  ` : '';
+
+  body.innerHTML = `
+
+    <!-- 1. Header -->
+    <div class="dossier-header ${isCustomer ? 'dossier-customer' : 'dossier-prospect'}">
+      <div class="dossier-title-row">
+        <div>
+          <div class="dossier-type-label">${isCustomer ? 'CUSTOMER VALUE DOSSIER' : 'PROSPECT VALUE DOSSIER'}</div>
+          <h2 class="dossier-account">${accountName}</h2>
+          <div class="dossier-subtitle">
+            ${s.industry} | ${s.segment} | ${s.region}
+            ${s.employees ? ` | ${s.employees.toLocaleString()} employees` : ''}
+            ${s.revenue ? ` | ${s.revenue} revenue` : ''}
+          </div>
+        </div>
+        <div class="dossier-header-actions">
+          <span class="dossier-type-badge ${isCustomer ? 'badge-customer' : 'badge-prospect'}">${isCustomer ? 'Customer' : 'Prospect'}</span>
+          ${healthBadgeHtml}
+        </div>
+      </div>
+      <div class="dossier-meta">
+        <span>Updated: ${formatDate(d.lastUpdated)}</span>
+        <span>Team: ${s.accountTeam?.ae || '—'} (AE) / ${s.accountTeam?.se || '—'} (SE) / ${s.accountTeam?.vc || '—'} (VC)</span>
+        ${d.companyType ? `<span>${d.companyType === 'public' ? '📈 Public' : d.companyType === 'private-funded' ? '💰 Private (Funded)' : '🏢 Private'}</span>` : ''}
+      </div>
+      ${confBar}
+    </div>
+
+    <!-- 2. The Situation -->
+    <div class="dossier-section">
+      <h3 class="dossier-h3">The Situation</h3>
+
+      <div class="situation-pills">
+        ${s.arr ? `<span class="situation-pill">ARR: $${s.arr.toLocaleString()}</span>` : ''}
+        ${s.renewalDate ? `<span class="situation-pill">Renewal: ${formatDate(s.renewalDate)}</span>` : ''}
+        ${s.productsLicensed?.length > 0 ? `<span class="situation-pill">Products: ${s.productsLicensed.join(', ')}</span>` : ''}
+        ${s.contractYears ? `<span class="situation-pill">Contract: ${s.contractYears} yr</span>` : ''}
+        ${s.employees ? `<span class="situation-pill">${s.employees.toLocaleString()} employees</span>` : ''}
+        ${s.revenue ? `<span class="situation-pill">${s.revenue} revenue</span>` : ''}
+      </div>
+
+      ${d.dealTimeline?.length > 0 ? `
+        <h4 class="dossier-h4">Deal Timeline</h4>
+        <div class="deal-timeline">
+          ${d.dealTimeline.map(ev => `
+            <div class="timeline-item type-${ev.type || 'milestone'}">
+              <span class="timeline-date">${ev.date ? formatDate(ev.date) : ''}</span>
+              <span class="timeline-dot"></span>
+              <span class="timeline-event">${ev.event}</span>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+
+      ${s.primaryUseCases?.length > 0 ? `
+        <h4 class="dossier-h4">Primary Use Cases</h4>
+        <div class="usecase-tags">
+          ${s.primaryUseCases.map(uc => `
+            <span class="usecase-tag">${uc.text} ${confidenceTag(uc.confidence, uc.source, uc.sourceUrl)}</span>
+          `).join('')}
+        </div>
+      ` : ''}
+    </div>
+
+    <!-- 3. People & Relationships -->
+    ${(s.stakeholders?.length > 0 || d.relationshipContext?.length > 0) ? `
+    <div class="dossier-section">
+      <h3 class="dossier-h3">People &amp; Relationships</h3>
+
+      ${s.stakeholders?.length > 0 ? `
+        <div class="stakeholder-cards">
+          ${s.stakeholders.map(st => `
+            <div class="stakeholder-card">
+              <div class="stakeholder-name">${st.name}</div>
+              <div class="stakeholder-title">${st.title}</div>
+              <div class="stakeholder-role">${st.role}</div>
+              ${confidenceTag(st.confidence, st.source, st.sourceUrl)}
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+
+      ${d.relationshipContext?.length > 0 ? `
+        <div class="rel-bullets">
+          ${d.relationshipContext.map(rc => {
+            const catIcons = { champion: '👤', politics: '🏛️', risk: '⚠️', competitive: '⚔️', sentiment: '💬', 'decision-process': '🔄' };
+            return `
+            <div class="rel-bullet rel-${rc.category}">
+              <span class="rel-cat">${catIcons[rc.category] || '📌'} ${rc.category}</span>
+              <span class="rel-text">${rc.insight}</span>
+              ${confidenceTag(rc.confidence, rc.source, rc.sourceUrl)}
+            </div>`;
+          }).join('')}
+        </div>
+      ` : ''}
+    </div>
+    ` : ''}
+
+    <!-- 4a. Adoption & Health (customers) -->
+    ${isCustomer ? `
+    <div class="dossier-section">
+      <h3 class="dossier-h3">Adoption &amp; Health ${d.adoption ? `<span class="trend-indicator trend-${d.adoption.trendDirection}">${d.adoption.trendDirection === 'growing' ? '📈 Growing' : d.adoption.trendDirection === 'declining' ? '📉 Declining' : '📊 Stable'}</span>` : ''}</h3>
+
+      ${d.adoption ? renderAdoptionChart(d.adoption) : ''}
+
+      ${d.productHealth ? `
+        <h4 class="dossier-h4">Feature Usage</h4>
+        ${renderFeatureHeatmap(d.productHealth)}
+        ${d.productHealth.dataHealth ? `
+          <div class="data-health-row">
+            <div class="health-metric">
+              <span class="health-label">Volume Trend</span>
+              <span class="health-value">${d.productHealth.dataHealth.volumeTrend}</span>
+            </div>
+            <div class="health-metric">
+              <span class="health-label">Taxonomy Score</span>
+              <span class="health-value">${d.productHealth.dataHealth.taxonomyScore}/100</span>
+            </div>
+          </div>
+          ${d.productHealth.dataHealth.instrumentationGaps?.length > 0 ? `
+            <div class="instrumentation-gaps">
+              <strong>Instrumentation Gaps:</strong>
+              <ul>${d.productHealth.dataHealth.instrumentationGaps.map(g => `<li>${g}</li>`).join('')}</ul>
+            </div>
+          ` : ''}
+        ` : ''}
+        ${d.productHealth.underusedFeatures?.length > 0 ? `
+          <h4 class="dossier-h4">Expansion Signals (Underused Features)</h4>
+          <div class="underused-list">
+            ${d.productHealth.underusedFeatures.map(f => `<div class="underused-item">💡 ${f}</div>`).join('')}
+          </div>
+        ` : ''}
+      ` : ''}
+
+      ${d.supportSignals ? `
+        <h4 class="dossier-h4">Support Signals</h4>
+        <div class="support-signals">
+          ${d.supportSignals.openTickets !== undefined ? `
+            <div class="support-metric">
+              <span class="support-value">${d.supportSignals.openTickets}</span>
+              <span class="support-label">Open Tickets</span>
+            </div>` : ''}
+          ${d.supportSignals.lastCsat !== undefined ? `
+            <div class="support-metric">
+              <span class="support-value">${d.supportSignals.lastCsat}</span>
+              <span class="support-label">Last CSAT</span>
+            </div>` : ''}
+          ${d.supportSignals.p1Incidents !== undefined ? `
+            <div class="support-metric">
+              <span class="support-value">${d.supportSignals.p1Incidents}</span>
+              <span class="support-label">P1 Incidents (90d)</span>
+            </div>` : ''}
+          ${d.supportSignals.avgResponseHours !== undefined ? `
+            <div class="support-metric">
+              <span class="support-value">${d.supportSignals.avgResponseHours}h</span>
+              <span class="support-label">Avg Response</span>
+            </div>` : ''}
+          ${Object.entries(d.supportSignals)
+            .filter(([k]) => !['openTickets','lastCsat','p1Incidents','avgResponseHours'].includes(k))
+            .map(([k, v]) => `
+            <div class="support-metric">
+              <span class="support-value">${v}</span>
+              <span class="support-label">${k}</span>
+            </div>`).join('')}
+        </div>
+      ` : ''}
+    </div>
+    ` : ''}
+
+    <!-- 4b. Company Intelligence (prospects) -->
+    ${!isCustomer && d.externalContext ? `
+    <div class="dossier-section">
+      <h3 class="dossier-h3">Company Intelligence</h3>
+
+      ${d.externalContext.firmographics ? `
+        <h4 class="dossier-h4">Firmographics</h4>
+        <div class="dossier-dl">
+          ${d.externalContext.firmographics.founded ? `<dt>Founded</dt><dd>${d.externalContext.firmographics.founded}</dd>` : ''}
+          ${d.externalContext.firmographics.headquarters ? `<dt>HQ</dt><dd>${d.externalContext.firmographics.headquarters}</dd>` : ''}
+          ${d.externalContext.firmographics.funding ? `<dt>Funding</dt><dd>${d.externalContext.firmographics.funding}</dd>` : ''}
+          ${d.externalContext.firmographics.techStack ? `<dt>Tech Stack</dt><dd>${d.externalContext.firmographics.techStack.join(', ')}</dd>` : ''}
+        </div>
+      ` : ''}
+
+      ${d.externalContext.strategicPriorities?.length > 0 ? `
+        <h4 class="dossier-h4">Strategic Priorities</h4>
+        <div class="usecase-tags">
+          ${d.externalContext.strategicPriorities.map(sp => `
+            <span class="usecase-tag">${sp.priority} ${confidenceTag(sp.confidence, sp.source, sp.sourceUrl)}</span>
+          `).join('')}
+        </div>
+      ` : ''}
+
+      ${d.externalContext.industryTrends ? `
+        <h4 class="dossier-h4">Industry Trends</h4>
+        <p class="dossier-body">${d.externalContext.industryTrends}</p>
+      ` : ''}
+
+      ${d.externalContext.recentNews?.length > 0 ? `
+        <h4 class="dossier-h4">Recent News</h4>
+        <div class="news-list">
+          ${d.externalContext.recentNews.map(n => `
+            <div class="news-item">
+              <div class="news-headline">${n.url ? `<a href="${n.url}" target="_blank">${n.headline}</a>` : n.headline}</div>
+              <div class="news-meta">${formatDate(n.date)} ${confidenceTag(n.confidence, n.source, n.sourceUrl)}</div>
+              ${n.relevance ? `<div class="news-relevance">${n.relevance}</div>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+    </div>
+    ` : ''}
+
+    <!-- 4c. External Context (customers — news only) -->
+    ${isCustomer && d.externalContext?.recentNews?.length > 0 ? `
+    <div class="dossier-section">
+      <h3 class="dossier-h3">External Context</h3>
+      <div class="news-list">
+        ${d.externalContext.recentNews.map(n => `
+          <div class="news-item">
+            <div class="news-headline">${n.url ? `<a href="${n.url}" target="_blank">${n.headline}</a>` : n.headline}</div>
+            <div class="news-meta">${formatDate(n.date)} ${confidenceTag(n.confidence, n.source, n.sourceUrl)}</div>
+            ${n.relevance ? `<div class="news-relevance">${n.relevance}</div>` : ''}
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    ` : ''}
+
+    <!-- 5. Value Story -->
+    ${(isCustomer && d.valueRealized) || (!isCustomer && d.valueHypothesis) ? `
+    <div class="dossier-section">
+      <h3 class="dossier-h3">${isCustomer ? 'Value Story' : 'Value Hypothesis'}</h3>
+
+      ${isCustomer && d.valueRealized ? `
+        <div class="value-summary-banner">
+          <span class="value-total">$${(d.valueRealized.items.reduce((sum, i) => sum + (i.dollarValue || 0), 0)).toLocaleString()}</span>
+          <span class="value-label">Estimated Annual Value Realized</span>
+        </div>
+        <div class="value-items">
+          ${d.valueRealized.items.map(v => `
+            <div class="value-item">
+              <div class="value-item-header">
+                <h4 class="value-item-title">${v.title}</h4>
+                <span class="value-dollar-inline">$${(v.dollarValue || 0).toLocaleString()}/year</span>
+                ${confidenceTag(v.confidence, v.source, v.sourceUrl)}
+              </div>
+              <div class="value-metric">${v.metric}</div>
+              <details class="value-details">
+                <summary>View methodology</summary>
+                <div class="value-methodology">${v.methodology}</div>
+              </details>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+
+      ${!isCustomer && d.valueHypothesis ? `
+        <p class="dossier-body">${d.valueHypothesis.summary}</p>
+        <div class="value-items">
+          ${d.valueHypothesis.items.map(v => `
+            <div class="value-item value-item-prospect">
+              <div class="value-item-header">
+                <h4 class="value-item-title">${v.title}</h4>
+                <span class="value-dollar-inline">$${(v.projection || 0).toLocaleString()}/year</span>
+                ${confidenceTag(v.confidence, v.source, v.sourceUrl)}
+              </div>
+              ${v.comparableCustomer ? `<div class="value-comparable">📊 ${v.comparableCustomer}</div>` : ''}
+              <details class="value-details">
+                <summary>View methodology</summary>
+                <div class="value-methodology">${v.methodology}</div>
+              </details>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+    </div>
+    ` : ''}
+
+    <!-- 6. Prior VC Engagements -->
+    ${d.priorVcEngagements?.length > 0 ? `
+    <div class="dossier-section">
+      <h3 class="dossier-h3">Prior VC Engagements</h3>
+      <div class="vc-engagements">
+        ${d.priorVcEngagements.map(eng => {
+          const outcomeClass = eng.outcome?.toLowerCase().includes('won') ? 'outcome-won'
+            : eng.outcome?.toLowerCase().includes('lost') ? 'outcome-lost'
+            : 'outcome-pending';
+          return `
+          <div class="vc-engagement">
+            <div class="vc-eng-header">
+              <span class="vc-eng-date">${eng.date ? formatDate(eng.date) : ''}</span>
+              <span class="vc-eng-vc">${eng.vc || ''}</span>
+              ${eng.outcome ? `<span class="vc-eng-outcome ${outcomeClass}">${eng.outcome}</span>` : ''}
+            </div>
+            ${eng.deliverable ? `<div class="vc-eng-deliverable">${eng.deliverable}</div>` : ''}
+            ${eng.result ? `<div class="vc-eng-result">${eng.result}</div>` : ''}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+    ` : ''}
+
+    <!-- 7. Competitive Position -->
+    ${d.competitiveLandscape ? `
+    <div class="dossier-section">
+      <h3 class="dossier-h3">Competitive Position</h3>
+
+      ${d.competitiveLandscape.currentTools?.length > 0 ? `
+        <h4 class="dossier-h4">Current Tools</h4>
+        <div class="comp-deployed-grid">
+          ${d.competitiveLandscape.currentTools.map(c => {
+            const m = MATURITY_LABELS[c.maturity] || MATURITY_LABELS['emerging'];
+            return `
+            <div class="comp-card">
+              <div class="comp-card-header">
+                <strong class="comp-name">${c.name}</strong>
+                <span class="comp-maturity-badge" style="background:${m.bg}; color:${m.color}">${m.icon} ${m.label}</span>
+              </div>
+              <div class="comp-product">${c.product}</div>
+              ${c.since ? `<div class="comp-since">Deployed since ${c.since}</div>` : ''}
+              ${c.notes ? `<div class="comp-notes">${c.notes}</div>` : ''}
+              <div class="comp-conf">${confidenceTag(c.confidence, c.source, c.sourceUrl)}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      ` : ''}
+
+      ${d.competitiveLandscape.buyerIntent ? `<p class="dossier-body"><strong>Buyer Intent:</strong> ${d.competitiveLandscape.buyerIntent}</p>` : ''}
+
+      ${d.competitiveLandscape.amplitudeDifferentiators?.length > 0 ? `
+        <h4 class="dossier-h4">Amplitude Differentiators</h4>
+        <ul class="dossier-list">${d.competitiveLandscape.amplitudeDifferentiators.map(diff => `<li>${diff}</li>`).join('')}</ul>
+      ` : ''}
+
+      ${d.competitiveLandscape.winLossPatterns ? `
+        <h4 class="dossier-h4">Win/Loss Patterns</h4>
+        <p class="dossier-body">${d.competitiveLandscape.winLossPatterns}</p>
+      ` : ''}
+
+      ${d.competitiveLandscape.analystPositioning ? `
+        <h4 class="dossier-h4">Analyst Positioning</h4>
+        <p class="dossier-body">${d.competitiveLandscape.analystPositioning}</p>
+      ` : ''}
+    </div>
+    ` : ''}
+
+    <!-- 8. Strategy & Talk Track -->
+    <div class="dossier-section">
+      <h3 class="dossier-h3">${isCustomer ? 'Strategy &amp; Talk Track' : 'Strategy &amp; Opportunity'}</h3>
+
+      ${isCustomer && d.strategy?.expansionPlays ? `
+        <h4 class="dossier-h4">Expansion Plays</h4>
+        ${d.strategy.expansionPlays.map(ep => `
+          <div class="expansion-play">
+            <div class="ep-header">
+              <strong>${ep.product}</strong>
+              <span class="ep-value">+$${(ep.estimatedIncrementalValue || 0).toLocaleString()} incremental</span>
+            </div>
+            <p class="ep-rationale">${ep.rationale}</p>
+            <details class="ep-details">
+              <summary>View methodology</summary>
+              <div class="ep-methodology">${ep.methodology}</div>
+            </details>
+            <div class="ep-confidence">${confidenceTag(ep.confidence, ep.source, ep.sourceUrl)}</div>
+          </div>
+        `).join('')}
+      ` : ''}
+
+      ${!isCustomer && d.strategy ? `
+        ${d.strategy.recommendedProducts ? `<p class="dossier-body"><strong>Recommended Products:</strong> ${d.strategy.recommendedProducts.join(', ')}</p>` : ''}
+        ${d.strategy.scopeRecommendation ? `<p class="dossier-body"><strong>Scope:</strong> ${d.strategy.scopeRecommendation}</p>` : ''}
+        ${d.strategy.landAndExpand ? `
+          <h4 class="dossier-h4">Land &amp; Expand Plan</h4>
+          <p class="dossier-body">${d.strategy.landAndExpand}</p>
+        ` : ''}
+        ${d.strategy.multiYearRationale ? `<p class="dossier-body"><strong>Multi-Year Rationale:</strong> ${d.strategy.multiYearRationale}</p>` : ''}
+      ` : ''}
+
+      ${d.strategy?.renewalPositioning ? `
+        <h4 class="dossier-h4">Renewal Positioning</h4>
+        <p class="dossier-body">${d.strategy.renewalPositioning}</p>
+      ` : ''}
+      ${d.strategy?.pricingNotes ? `
+        <h4 class="dossier-h4">Pricing Notes</h4>
+        <p class="dossier-body">${d.strategy.pricingNotes}</p>
+      ` : ''}
+
+      ${d.talkTrack?.keyMessages?.length > 0 ? `
+        <h4 class="dossier-h4">Key Messages</h4>
+        <ol class="talk-track-list">
+          ${d.talkTrack.keyMessages.map(msg => `<li class="talk-track-item">${msg}</li>`).join('')}
+        </ol>
+      ` : ''}
+
+      ${d.talkTrack?.objectionHandling?.length > 0 ? `
+        <h4 class="dossier-h4">Objection Handling</h4>
+        ${d.talkTrack.objectionHandling.map(obj => `
+          <details class="objection-details">
+            <summary>${obj.objection}</summary>
+            <div class="objection-response">${obj.response}</div>
+          </details>
+        `).join('')}
+      ` : ''}
+
+      ${d.strategy?.riskFactors?.length > 0 ? `
+        <h4 class="dossier-h4">Risk Factors</h4>
+        ${d.strategy.riskFactors.map(rf => {
+          const sevColors = { high: '#dc2626', medium: '#d97706', low: '#6b7280' };
+          return `
+          <div class="risk-factor">
+            <div class="risk-header">
+              <span class="risk-severity" style="color:${sevColors[rf.severity] || '#6b7280'}">${rf.severity.toUpperCase()} RISK</span>
+              <span>${rf.risk}</span>
+            </div>
+            <div class="risk-meta">${confidenceTag(rf.confidence, rf.source, rf.sourceUrl)}</div>
+            ${rf.mitigation ? `<div class="risk-mitigation"><strong>Mitigation:</strong> ${rf.mitigation}</div>` : ''}
+          </div>`;
+        }).join('')}
+      ` : ''}
+
+      ${d.openQuestions?.length > 0 ? `
+        <h4 class="dossier-h4">Open Questions</h4>
+        <div class="action-items">
+          ${d.openQuestions.map(q => {
+            const prioClass = { high: 'priority-high', medium: 'priority-medium', low: 'priority-low' }[q.priority] || 'priority-medium';
+            return `
+            <div class="action-item ${prioClass}">
+              <span class="action-priority">${q.priority?.toUpperCase() || '—'}</span>
+              <span class="action-text">${q.question}</span>
+              <span class="action-owner">Owner: ${q.owner}${q.dueDate ? ` · Due: ${formatDate(q.dueDate)}` : ''}</span>
+            </div>`;
+          }).join('')}
+        </div>
+      ` : ''}
+    </div>
+
+    <!-- 9. Data Sources -->
+    ${d.dataSources?.length > 0 ? `
+    <div class="dossier-section dossier-section-footer">
+      <h3 class="dossier-h3">Data Sources</h3>
+      <div class="ds-badges">
+        ${d.dataSources.map(ds => {
+          const statusIcon = ds.status === 'found' ? '✅' : ds.status === 'partial' ? '⚠️' : '❌';
+          const badgeClass = ds.status === 'found' ? 'ds-found' : ds.status === 'partial' ? 'ds-partial' : 'ds-not-found';
+          return `<span class="ds-badge ${badgeClass}" title="${ds.detail || ''}">${statusIcon} ${ds.source}</span>`;
+        }).join('')}
+      </div>
+    </div>
+    ` : ''}
+  `;
+
+  modal.classList.remove('hidden');
 }
 
 // ============================================================
@@ -2154,6 +2975,63 @@ function renderAnalytics() {
     </div>
   ` : '<p class="analytics-empty">No use case data yet.</p>';
 
+  // --- Support Types Requested ---
+  const SUPPORT_TYPE_MAP = [
+    { key: 'financial-model', label: 'Financial Model', keywords: ['financial model', 'outside-in financial'] },
+    { key: 'bva', label: 'BVA / Value Assessment', keywords: ['bva', 'business value assessment', 'collaborative bva'] },
+    { key: 'value-realization', label: 'Value Realization', keywords: ['value realization', 'roi recap', 'ebr', 'qbr'] },
+    { key: 'expansion-roi', label: 'Expansion ROI', keywords: ['expansion business case', 'expansion roi', 'roi analysis for expansion', 'upsell', 'cross-sell'] },
+    { key: 'exec-discovery', label: 'Executive Discovery', keywords: ['executive stakeholder', 'discovery support', 'exec alignment', 'stakeholder interview'] },
+    { key: 'ebc-prep', label: 'EBC Prep', keywords: ['ebc', 'executive briefing', 'value narrative'] },
+    { key: 'competitive', label: 'Competitive Positioning', keywords: ['competitive value', 'competitive positioning', 'differentiation'] },
+    { key: 'other', label: 'Other', keywords: [] }
+  ];
+
+  const supportCounts = {};
+  SUPPORT_TYPE_MAP.forEach(st => { supportCounts[st.key] = 0; });
+
+  all.forEach(r => {
+    if (!r.helpNeeded) return;
+    const ask = r.helpNeeded.toLowerCase();
+    let matched = false;
+    SUPPORT_TYPE_MAP.forEach(st => {
+      if (st.key === 'other') return;
+      if (st.keywords.some(kw => ask.includes(kw))) {
+        supportCounts[st.key]++;
+        matched = true;
+      }
+    });
+    if (!matched) supportCounts['other']++;
+  });
+
+  const supportEntries = SUPPORT_TYPE_MAP
+    .map(st => ({ ...st, count: supportCounts[st.key] }))
+    .filter(st => st.count > 0)
+    .sort((a, b) => b.count - a.count);
+
+  const supportMax = supportEntries.length > 0 ? supportEntries[0].count : 1;
+  const supportColors = ['#1B1F3B', '#2563eb', '#7c3aed', '#0891b2', '#d97706', '#16a34a', '#dc2626', '#6b7280'];
+
+  const supportEl = document.querySelector('#analytics-support-types .analytics-card-body');
+  if (supportEl) {
+    supportEl.innerHTML = supportEntries.length > 0 ? `
+      <div class="bar-chart">
+        ${supportEntries.map((st, i) => {
+          const pct = supportMax > 0 ? (st.count / supportMax * 100) : 0;
+          return `
+            <div class="bar-row">
+              <span class="bar-label bar-label-wide">${st.label}</span>
+              <div class="bar-track">
+                <div class="bar-fill" style="width:${pct}%; background:${supportColors[i % supportColors.length]}"></div>
+              </div>
+              <span class="bar-value">${st.count}</span>
+            </div>`;
+        }).join('')}
+      </div>
+      <p class="analytics-footnote" style="margin-top:12px; font-size:12px; color:var(--gray-400);">Parsed from AE support selections. A request may match multiple categories.</p>
+    ` : '<p class="analytics-empty">No support type data yet.</p>';
+  }
+
   // --- All Requests Table ---
   document.querySelector('#analytics-table .analytics-card-body').innerHTML = `
     <div class="analytics-table-wrapper">
@@ -2193,6 +3071,7 @@ function renderAnalytics() {
 // ============================================================
 // Init
 // ============================================================
+migrateRequests();
 populateVcFilter();
 renderTracker();
 
