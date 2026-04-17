@@ -1125,7 +1125,7 @@ function renderTracker() {
             <span class="info-tooltip-text">Full account intelligence report — company research, stakeholder map, product usage, value story, competitive landscape, and strategic talk track. Pulled from Salesforce, Slack, Granola, and web sources.</span>
           </span>
         </div>
-        <button class="btn-comments" data-id="${r.id}">
+        <button class="btn-comments ${noteCount > 0 ? 'btn-comments-has-notes' : ''}" data-id="${r.id}">
           💬 ${noteCount > 0 ? noteCount : ''} Comment${noteCount !== 1 ? 's' : ''}
         </button>
       </div>
@@ -2659,6 +2659,7 @@ function syncNotesSurfaces(requestId, notes) {
 
   if (commentBtn) {
     commentBtn.innerHTML = `💬 ${notes.length > 0 ? notes.length : ''} Comment${notes.length !== 1 ? 's' : ''}`;
+    commentBtn.classList.toggle('btn-comments-has-notes', notes.length > 0);
     // also update the inline count badge in the meta row
     const card = commentBtn.closest('.tracker-card');
     if (card) {
