@@ -2774,58 +2774,65 @@ function renderAnalytics() {
   document.getElementById('analytics-summary').innerHTML = `
     <!-- Group 1: Activity -->
     <div class="summary-group">
-      <div class="summary-group-label">Activity</div>
-      <div class="summary-group-cards">
-        <div class="summary-card">
-          <div class="summary-value">${all.length}</div>
-          <div class="summary-label">Total Requests</div>
-        </div>
-        <div class="summary-card">
-          <div class="summary-value">${completed.length}</div>
-          <div class="summary-label">Completed</div>
+      <div class="summary-group-inner">
+        <div class="summary-group-label">Activity</div>
+        <div class="summary-group-cards">
+          <div class="summary-card">
+            <div class="summary-value">${all.length}</div>
+            <div class="summary-label">Requests</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-value">${completed.length}</div>
+            <div class="summary-label">Completed</div>
+          </div>
         </div>
       </div>
     </div>
     <!-- Group 2: Pipeline to Wins -->
-    <div class="summary-group summary-group-wide">
-      <div class="summary-group-label">Pipeline → Wins</div>
-      <div class="summary-group-cards">
-        <div class="summary-card">
-          <div class="summary-value">$${totalArr.toLocaleString()}</div>
-          <div class="summary-label">Pipeline ARR</div>
-        </div>
-        <div class="summary-card-arrow">→</div>
-        <div class="summary-card">
-          <div class="summary-value">$${wonArr.toLocaleString()}</div>
-          <div class="summary-label">Won ARR</div>
-        </div>
-        <div class="summary-card">
-          <div class="summary-value">${wonArrRate}${wonArrRate !== '—' ? '%' : ''}</div>
-          <div class="summary-label">Won ARR Rate</div>
+    <div class="summary-group">
+      <div class="summary-group-inner">
+        <div class="summary-group-label">Pipeline → Wins</div>
+        <div class="summary-group-cards">
+          <div class="summary-card">
+            <div class="summary-value">$${totalArr.toLocaleString()}</div>
+            <div class="summary-label">Pipeline ARR</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-value">$${wonArr.toLocaleString()}</div>
+            <div class="summary-label">Won ARR</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-value">${wonArrRate}${wonArrRate !== '—' ? '%' : ''}</div>
+            <div class="summary-label">Won ARR Rate</div>
+          </div>
         </div>
       </div>
     </div>
-    <!-- Group 3: Win Performance -->
+    <!-- Group 3: Performance -->
     <div class="summary-group">
-      <div class="summary-group-label">Performance</div>
-      <div class="summary-group-cards">
-        <div class="summary-card">
-          <div class="summary-value">${winRate}${winRate !== '—' ? '%' : ''}</div>
-          <div class="summary-label">Win Rate (Deals)</div>
-        </div>
-        <div class="summary-card ${avgDealDelta >= 0 ? 'summary-green' : 'summary-red'}">
-          <div class="summary-value">${avgDealDelta >= 0 ? '+' : '-'}$${Math.abs(Math.round(avgDealDelta)).toLocaleString()}</div>
-          <div class="summary-label">Avg Deal Delta</div>
+      <div class="summary-group-inner">
+        <div class="summary-group-label">Performance</div>
+        <div class="summary-group-cards">
+          <div class="summary-card">
+            <div class="summary-value">${winRate}${winRate !== '—' ? '%' : ''}</div>
+            <div class="summary-label">Win Rate</div>
+          </div>
+          <div class="summary-card ${avgDealDelta >= 0 ? 'summary-green' : 'summary-red'}">
+            <div class="summary-value">${avgDealDelta >= 0 ? '+' : '-'}$${Math.abs(Math.round(avgDealDelta)).toLocaleString()}</div>
+            <div class="summary-label">Avg Deal Delta</div>
+          </div>
         </div>
       </div>
     </div>
     <!-- Group 4: VC Impact -->
     <div class="summary-group">
-      <div class="summary-group-label">VC Impact</div>
-      <div class="summary-group-cards">
-        <div class="summary-card">
-          <div class="summary-value">$${influencedArr.toLocaleString()}</div>
-          <div class="summary-label">Influenced ARR</div>
+      <div class="summary-group-inner">
+        <div class="summary-group-label">VC Impact</div>
+        <div class="summary-group-cards">
+          <div class="summary-card">
+            <div class="summary-value">$${influencedArr.toLocaleString()}</div>
+            <div class="summary-label">Influenced ARR</div>
+          </div>
         </div>
       </div>
     </div>
