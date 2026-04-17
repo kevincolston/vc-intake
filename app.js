@@ -2479,6 +2479,14 @@ function setupMentionAutocomplete(requestId) {
 // Helpers
 // ============================================================
 function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
+function shortCurrency(n) {
+  if (n == null || isNaN(n)) return '—';
+  const abs = Math.abs(n);
+  const sign = n < 0 ? '-' : '';
+  if (abs >= 1_000_000) return sign + '$' + (abs / 1_000_000).toFixed(abs % 1_000_000 === 0 ? 0 : 1) + 'M';
+  if (abs >= 1_000) return sign + '$' + (abs / 1_000).toFixed(abs % 1_000 === 0 ? 0 : 1) + 'K';
+  return sign + '$' + abs.toLocaleString();
+}
 function formatDate(d) {
   if (!d) return '—';
   const date = new Date(d + 'T00:00:00');
@@ -2769,7 +2777,10 @@ function renderAnalytics() {
     : 0;
 
   const wonArr = won.reduce((sum, r) => sum + (r.closedArr || r.arr || 0), 0);
-  const wonArrRate = totalArr > 0 ? ((wonArr / totalArr) * 100).toFixed(0) : '—';
+  // ARR Win Rate: dollar-weighted win rate on closed deals only (parallel to deal-count Win Rate)
+  const lostArr = all.filter(r => r.outcome === 'lost').reduce((sum, r) => sum + (r.closedArr || r.arr || 0), 0);
+  const closedArr = wonArr + lostArr;
+  const arrWinRate = closedArr > 0 ? ((wonArr / closedArr) * 100).toFixed(0) : '—';
 
   document.getElementById('analytics-summary').innerHTML = `
     <!-- Group 1: Activity -->
@@ -2794,16 +2805,16 @@ function renderAnalytics() {
         <div class="summary-group-label">Pipeline → Wins</div>
         <div class="summary-group-cards">
           <div class="summary-card">
-            <div class="summary-value">$${totalArr.toLocaleString()}</div>
+            <div class="summary-value">${shortCurrency(totalArr)}</div>
             <div class="summary-label">Pipeline ARR</div>
           </div>
           <div class="summary-card">
-            <div class="summary-value">$${wonArr.toLocaleString()}</div>
+            <div class="summary-value">${shortCurrency(wonArr)}</div>
             <div class="summary-label">Won ARR</div>
           </div>
           <div class="summary-card">
-            <div class="summary-value">${wonArrRate}${wonArrRate !== '—' ? '%' : ''}</div>
-            <div class="summary-label">Won ARR Rate</div>
+            <div class="summary-value">${arrWinRate}${arrWinRate !== '—' ? '%' : ''}</div>
+            <div class="summary-label">ARR Win Rate</div>
           </div>
         </div>
       </div>
@@ -2818,7 +2829,7 @@ function renderAnalytics() {
             <div class="summary-label">Win Rate</div>
           </div>
           <div class="summary-card ${avgDealDelta >= 0 ? 'summary-green' : 'summary-red'}">
-            <div class="summary-value">${avgDealDelta >= 0 ? '+' : '-'}$${Math.abs(Math.round(avgDealDelta)).toLocaleString()}</div>
+            <div class="summary-value">${avgDealDelta >= 0 ? '+' : ''}${shortCurrency(Math.round(avgDealDelta))}</div>
             <div class="summary-label">Avg Deal Delta</div>
           </div>
         </div>
@@ -2830,7 +2841,7 @@ function renderAnalytics() {
         <div class="summary-group-label">VC Impact</div>
         <div class="summary-group-cards">
           <div class="summary-card">
-            <div class="summary-value">$${influencedArr.toLocaleString()}</div>
+            <div class="summary-value">${shortCurrency(influencedArr)}</div>
             <div class="summary-label">Influenced ARR</div>
           </div>
         </div>
