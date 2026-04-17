@@ -1129,30 +1129,21 @@ function renderTracker() {
           💬 ${noteCount > 0 ? noteCount : ''} Comment${noteCount !== 1 ? 's' : ''}
         </button>
       </div>
-    </div>
 
-    <!-- Inline Comments Panel (collapsed by default) -->
-    <div class="card-comments-panel hidden" id="comments-panel-${r.id}">
-      <div class="comments-list" id="comments-list-${r.id}">
-        ${(r.notes || []).length === 0
-          ? '<p class="comments-empty">No comments yet. Be the first to add one.</p>'
-          : (r.notes || []).slice().reverse().map(n => `
-            <div class="comment-item">
-              <div class="comment-header">
-                <span class="comment-author">${n.author}</span>
-                <span class="comment-time">${formatDateTime(n.timestamp)}</span>
-              </div>
-              <p class="comment-text">${renderMentions(n.text)}</p>
-              ${n.mentions?.length > 0 ? `<div class="comment-notified">Notified: ${n.mentions.map(m => `<span class="mention-tag">@${m}</span>`).join(' ')}</div>` : ''}
-            </div>
-          `).join('')}
-      </div>
-      <div class="comment-input-row">
-        <div class="mention-wrapper" style="flex:1;position:relative">
-          <textarea class="comment-input" id="comment-input-${r.id}" rows="2" placeholder="Add a comment... type @ to mention someone (e.g. @Kevin Colston)"></textarea>
-          <div class="mention-dropdown hidden" id="mention-dropdown-${r.id}"></div>
+      <!-- Inline Comments Panel (collapsed by default, nested inside card) -->
+      <div class="card-comments-panel hidden" id="comments-panel-${r.id}">
+        <div class="comments-list" id="comments-list-${r.id}">
+          ${(r.notes || []).length === 0
+            ? '<p class="comments-empty">No comments yet. Be the first to add one.</p>'
+            : (r.notes || []).slice().reverse().map(n => renderNoteItemHTML(n)).join('')}
         </div>
-        <button class="btn btn-primary btn-post-comment" data-id="${r.id}">Post</button>
+        <div class="comment-input-row">
+          <div class="mention-wrapper" style="flex:1;position:relative">
+            <textarea class="comment-input" id="comment-input-${r.id}" rows="2" placeholder="Add a comment... type @ to mention someone (e.g. @Kevin Colston)"></textarea>
+            <div class="mention-dropdown hidden" id="mention-dropdown-${r.id}"></div>
+          </div>
+          <button class="btn btn-primary btn-post-comment" data-id="${r.id}">Post</button>
+        </div>
       </div>
     </div>
     `;
@@ -1222,24 +1213,7 @@ function renderTracker() {
 
       saveRequests();
       input.value = '';
-
-      // Re-render just the comments list
-      const list = document.getElementById(`comments-list-${id}`);
-      if (list) {
-        list.innerHTML = r.notes.slice().reverse().map(n => `
-          <div class="comment-item">
-            <div class="comment-header">
-              <span class="comment-author">${n.author}</span>
-              <span class="comment-time">${formatDateTime(n.timestamp)}</span>
-            </div>
-            <p class="comment-text">${renderMentions(n.text)}</p>
-            ${n.mentions?.length > 0 ? `<div class="comment-notified">Notified: ${n.mentions.map(m => `<span class="mention-tag">@${m}</span>`).join(' ')}</div>` : ''}
-          </div>
-        `).join('');
-      }
-      // Update the comment button count
-      const commentBtn = container.querySelector(`.btn-comments[data-id="${id}"]`);
-      if (commentBtn) commentBtn.textContent = `💬 ${r.notes.length} Comment${r.notes.length !== 1 ? 's' : ''}`;
+      syncNotesSurfaces(id, r.notes);
     });
   });
   container.querySelectorAll('.vc-assign-select').forEach(sel => {
@@ -1657,17 +1631,9 @@ function viewRequest(id) {
         <button class="btn btn-primary btn-add-note" data-id="${r.id}">Add Note</button>
       </div>
       <div class="notes-list" id="notes-list-${r.id}">
-        ${(r.notes || []).slice().reverse().map(n => `
-          <div class="note-item">
-            <div class="note-header">
-              <strong>${n.author}</strong>
-              <span class="note-time">${formatDateTime(n.timestamp)}</span>
-            </div>
-            <p class="note-text">${renderMentions(n.text)}</p>
-            ${n.mentions && n.mentions.length > 0 ? `<div class="note-mentions">Notified: ${n.mentions.map(m => `<span class="mention-tag">@${m}</span>`).join(' ')}</div>` : ''}
-          </div>
-        `).join('')}
-        ${(!r.notes || r.notes.length === 0) ? '<p class="brief-empty">No notes yet.</p>' : ''}
+        ${(!r.notes || r.notes.length === 0)
+          ? '<p class="brief-empty">No notes yet.</p>'
+          : r.notes.slice().reverse().map(n => renderNoteItemHTML(n)).join('')}
       </div>
     </div>
 
@@ -1731,7 +1697,8 @@ function viewRequest(id) {
 
       saveRequests();
       input.value = '';
-      viewRequest(r.id);
+      // Sync both the modal notes list AND the inline card comments panel
+      syncNotesSurfaces(r.id, r.notes);
       showToast(mentions.length > 0 ? `Note added — notified ${mentions.join(', ')}` : 'Note added');
     });
   }
@@ -2658,6 +2625,58 @@ function formatDateTime(iso) {
     d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 }
 function truncate(s, len) { return s && s.length > len ? s.substring(0, len) + '...' : s; }
+
+// Shared note/comment item HTML — used by both the inline card panel and the modal Notes section
+function renderNoteItemHTML(n) {
+  return `
+    <div class="comment-item">
+      <div class="comment-header">
+        <span class="comment-author">${n.author}</span>
+        <span class="comment-time">${formatDateTime(n.timestamp)}</span>
+      </div>
+      <p class="comment-text">${renderMentions(n.text)}</p>
+      ${n.mentions?.length > 0 ? `<div class="comment-notified">Notified: ${n.mentions.map(m => `<span class="mention-tag">@${m}</span>`).join(' ')}</div>` : ''}
+    </div>`;
+}
+
+// Sync both note surfaces (card inline panel + modal notes list) after any note/comment change
+function syncNotesSurfaces(requestId, notes) {
+  const notesList = document.getElementById(`notes-list-${requestId}`);
+  const commentsList = document.getElementById(`comments-list-${requestId}`);
+  const commentBtn = document.querySelector(`.btn-comments[data-id="${requestId}"]`);
+
+  const html = notes.length === 0
+    ? '<p class="comments-empty">No comments yet. Be the first to add one.</p>'
+    : notes.slice().reverse().map(n => renderNoteItemHTML(n)).join('');
+
+  if (commentsList) commentsList.innerHTML = html;
+
+  if (notesList) {
+    notesList.innerHTML = notes.length === 0
+      ? '<p class="brief-empty">No notes yet.</p>'
+      : notes.slice().reverse().map(n => renderNoteItemHTML(n)).join('');
+  }
+
+  if (commentBtn) {
+    commentBtn.innerHTML = `💬 ${notes.length > 0 ? notes.length : ''} Comment${notes.length !== 1 ? 's' : ''}`;
+    // also update the inline count badge in the meta row
+    const card = commentBtn.closest('.tracker-card');
+    if (card) {
+      const badge = card.querySelector('.card-note-count');
+      if (badge) badge.textContent = `💬 ${notes.length}`;
+      else if (notes.length > 0) {
+        const metaRow = card.querySelector('.card-meta-row');
+        if (metaRow) {
+          const span = document.createElement('span');
+          span.className = 'card-note-count';
+          span.title = `${notes.length} note(s)`;
+          span.textContent = `💬 ${notes.length}`;
+          metaRow.appendChild(span);
+        }
+      }
+    }
+  }
+}
 
 // ============================================================
 // Data Export
