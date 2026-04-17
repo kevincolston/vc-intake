@@ -1125,6 +1125,34 @@ function renderTracker() {
             <span class="info-tooltip-text">Full account intelligence report — company research, stakeholder map, product usage, value story, competitive landscape, and strategic talk track. Pulled from Salesforce, Slack, Granola, and web sources.</span>
           </span>
         </div>
+        <button class="btn-comments" data-id="${r.id}">
+          💬 ${noteCount > 0 ? noteCount : ''} Comment${noteCount !== 1 ? 's' : ''}
+        </button>
+      </div>
+    </div>
+
+    <!-- Inline Comments Panel (collapsed by default) -->
+    <div class="card-comments-panel hidden" id="comments-panel-${r.id}">
+      <div class="comments-list" id="comments-list-${r.id}">
+        ${(r.notes || []).length === 0
+          ? '<p class="comments-empty">No comments yet. Be the first to add one.</p>'
+          : (r.notes || []).slice().reverse().map(n => `
+            <div class="comment-item">
+              <div class="comment-header">
+                <span class="comment-author">${n.author}</span>
+                <span class="comment-time">${formatDateTime(n.timestamp)}</span>
+              </div>
+              <p class="comment-text">${renderMentions(n.text)}</p>
+              ${n.mentions?.length > 0 ? `<div class="comment-notified">Notified: ${n.mentions.map(m => `<span class="mention-tag">@${m}</span>`).join(' ')}</div>` : ''}
+            </div>
+          `).join('')}
+      </div>
+      <div class="comment-input-row">
+        <div class="mention-wrapper" style="flex:1;position:relative">
+          <textarea class="comment-input" id="comment-input-${r.id}" rows="2" placeholder="Add a comment... type @ to mention someone (e.g. @Kevin Colston)"></textarea>
+          <div class="mention-dropdown hidden" id="mention-dropdown-${r.id}"></div>
+        </div>
+        <button class="btn btn-primary btn-post-comment" data-id="${r.id}">Post</button>
       </div>
     </div>
     `;
@@ -1136,6 +1164,83 @@ function renderTracker() {
   });
   container.querySelectorAll('.btn-dossier').forEach(btn => {
     btn.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); viewDossier(btn.dataset.account); });
+  });
+
+  // Comments toggle
+  container.querySelectorAll('.btn-comments').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      const panel = document.getElementById(`comments-panel-${id}`);
+      const isOpen = !panel.classList.contains('hidden');
+      panel.classList.toggle('hidden', isOpen);
+      btn.classList.toggle('btn-comments-active', !isOpen);
+      if (!isOpen) {
+        // Focus the input when opened
+        document.getElementById(`comment-input-${id}`)?.focus();
+        // Wire up mention dropdown if not already done
+        wireCommentMentions(id);
+      }
+    });
+  });
+
+  // Post comment
+  container.querySelectorAll('.btn-post-comment').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const r = requests.find(req => req.id === id);
+      const input = document.getElementById(`comment-input-${id}`);
+      const text = input?.value.trim();
+      if (!r || !text) return;
+      if (!r.notes) r.notes = [];
+
+      const mentionRegex = /@([\w\s']+?)(?=\s@|\s*$|[,;.!?])/g;
+      const mentions = [];
+      let match;
+      while ((match = mentionRegex.exec(text)) !== null) {
+        const name = match[1].trim();
+        if (GTM_TEAM.some(p => p.name === name)) mentions.push(name);
+      }
+
+      r.notes.push({
+        author: r.assignedVc || 'VC Team',
+        text,
+        mentions: mentions.length > 0 ? mentions : undefined,
+        timestamp: new Date().toISOString()
+      });
+
+      mentions.forEach(name => {
+        if (!r.notifications) r.notifications = [];
+        r.notifications.push({
+          type: 'mention', to: name,
+          channel: `DM to ${name}`,
+          message: `You were mentioned in a comment on ${r.customerName} (${r.id})`,
+          timestamp: new Date().toISOString(), status: 'sent'
+        });
+        showToast(`📨 Notified @${name} via Slack`);
+      });
+
+      saveRequests();
+      input.value = '';
+
+      // Re-render just the comments list
+      const list = document.getElementById(`comments-list-${id}`);
+      if (list) {
+        list.innerHTML = r.notes.slice().reverse().map(n => `
+          <div class="comment-item">
+            <div class="comment-header">
+              <span class="comment-author">${n.author}</span>
+              <span class="comment-time">${formatDateTime(n.timestamp)}</span>
+            </div>
+            <p class="comment-text">${renderMentions(n.text)}</p>
+            ${n.mentions?.length > 0 ? `<div class="comment-notified">Notified: ${n.mentions.map(m => `<span class="mention-tag">@${m}</span>`).join(' ')}</div>` : ''}
+          </div>
+        `).join('');
+      }
+      // Update the comment button count
+      const commentBtn = container.querySelector(`.btn-comments[data-id="${id}"]`);
+      if (commentBtn) commentBtn.textContent = `💬 ${r.notes.length} Comment${r.notes.length !== 1 ? 's' : ''}`;
+    });
   });
   container.querySelectorAll('.vc-assign-select').forEach(sel => {
     sel.addEventListener('change', async function () {
@@ -2471,6 +2576,60 @@ function setupMentionAutocomplete(requestId) {
     if (!dropdown.classList.contains('hidden') && e.key === 'Escape') {
       dropdown.classList.add('hidden');
       e.stopPropagation();
+    }
+  });
+}
+
+// Wire @mention autocomplete for inline card comment inputs
+const wiredCommentPanels = new Set();
+function wireCommentMentions(requestId) {
+  if (wiredCommentPanels.has(requestId)) return;
+  wiredCommentPanels.add(requestId);
+
+  const textarea = document.getElementById(`comment-input-${requestId}`);
+  const dropdown = document.getElementById(`mention-dropdown-${requestId}`);
+  if (!textarea || !dropdown) return;
+
+  let mentionStart = -1;
+
+  textarea.addEventListener('input', () => {
+    const val = textarea.value;
+    const cursor = textarea.selectionStart;
+    const before = val.substring(0, cursor);
+    const atIndex = before.lastIndexOf('@');
+    if (atIndex === -1 || (atIndex > 0 && before[atIndex - 1] !== ' ' && before[atIndex - 1] !== '\n')) {
+      dropdown.classList.add('hidden'); mentionStart = -1; return;
+    }
+    const query = before.substring(atIndex + 1).toLowerCase();
+    if (query.includes(' ') && query.split(' ').length > 3) { dropdown.classList.add('hidden'); return; }
+    mentionStart = atIndex;
+    const matches = GTM_TEAM.filter(p =>
+      p.name.toLowerCase().includes(query) || p.role.toLowerCase().includes(query)
+    ).slice(0, 8);
+    if (!matches.length) { dropdown.classList.add('hidden'); return; }
+    dropdown.innerHTML = matches.map(p =>
+      `<div class="mention-item" data-name="${p.name}"><strong>${p.name}</strong><span class="mention-meta">${p.role} · ${p.team}</span></div>`
+    ).join('');
+    dropdown.classList.remove('hidden');
+    dropdown.querySelectorAll('.mention-item').forEach(item => {
+      item.addEventListener('mousedown', e => {
+        e.preventDefault();
+        const name = item.dataset.name;
+        const cur = textarea.selectionStart;
+        textarea.value = textarea.value.substring(0, mentionStart) + '@' + name + ' ' + textarea.value.substring(cur);
+        textarea.focus();
+        textarea.selectionStart = textarea.selectionEnd = mentionStart + name.length + 2;
+        dropdown.classList.add('hidden');
+      });
+    });
+  });
+  textarea.addEventListener('blur', () => setTimeout(() => dropdown.classList.add('hidden'), 200));
+  textarea.addEventListener('keydown', e => { if (e.key === 'Escape') dropdown.classList.add('hidden'); });
+
+  // Post on Cmd/Ctrl+Enter
+  textarea.addEventListener('keydown', e => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+      document.querySelector(`.btn-post-comment[data-id="${requestId}"]`)?.click();
     }
   });
 }

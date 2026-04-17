@@ -795,11 +795,130 @@ body {
   align-items: center;
   padding-top: 12px;
   border-top: 1px solid var(--gray-100);
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .card-controls {
   display: flex;
   gap: 8px;
+}
+
+/* Comments toggle button */
+.btn-comments {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gray-500);
+  background: #fff;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-family: inherit;
+  transition: var(--transition);
+}
+.btn-comments:hover { border-color: var(--amp-blue); color: var(--amp-blue); }
+.btn-comments.btn-comments-active {
+  background: var(--amp-blue-light);
+  border-color: var(--amp-blue);
+  color: var(--amp-blue);
+  font-weight: 600;
+}
+
+/* Inline Comments Panel */
+.card-comments-panel {
+  border-top: 1px solid var(--gray-100);
+  padding: 16px 20px 12px;
+  background: #fafafa;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  margin: 0 -20px -20px;
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.comment-item {
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+
+.comment-author {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+.comment-time {
+  font-size: 11px;
+  color: var(--gray-400);
+}
+
+.comment-text {
+  font-size: 13px;
+  color: var(--gray-700);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.comment-notified {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--gray-400);
+}
+
+.comments-empty {
+  font-size: 13px;
+  color: var(--gray-400);
+  font-style: italic;
+  text-align: center;
+  padding: 12px 0;
+}
+
+.comment-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.comment-input {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius);
+  background: #fff;
+  resize: none;
+  transition: border-color var(--transition);
+}
+.comment-input:focus {
+  outline: none;
+  border-color: var(--amp-blue);
+  box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+}
+
+.comment-input-hint {
+  font-size: 11px;
+  color: var(--gray-400);
+  margin-top: 4px;
 }
 
 /* Deal badges */
