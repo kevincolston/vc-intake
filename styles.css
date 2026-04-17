@@ -821,6 +821,17 @@ body {
   transition: var(--transition);
 }
 .btn-comments:hover { border-color: var(--amp-blue); color: var(--amp-blue); }
+.btn-comments.btn-comments-has-notes {
+  background: #fef9c3;
+  border-color: #fde047;
+  color: #854d0e;
+  font-weight: 600;
+}
+.btn-comments.btn-comments-has-notes:hover {
+  background: #fef08a;
+  border-color: #facc15;
+  color: #713f12;
+}
 .btn-comments.btn-comments-active {
   background: var(--amp-blue-light);
   border-color: var(--amp-blue);
@@ -961,8 +972,10 @@ body {
 .btn-view {
   padding: 6px 16px;
   font-size: 13px;
-  font-weight: 500;
-  border: 1px solid var(--gray-300);
+  font-weight: 600;
+  color: #1d4ed8;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
   border-radius: var(--radius);
   background: #fff;
   color: var(--gray-600);
@@ -970,7 +983,7 @@ body {
   transition: var(--transition);
   font-family: inherit;
 }
-.btn-view:hover { border-color: var(--amp-blue); color: var(--amp-blue); }
+.btn-view:hover { background: #dbeafe; border-color: #93c5fd; color: #1e40af; }
 
 .empty-state {
   padding: 48px 24px;
